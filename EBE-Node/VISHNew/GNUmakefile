@@ -10,14 +10,12 @@
 ##			distclean	remove all objectsfiles and binaries
 ##  
 
-FC := h5fc
-FFLAGS= -O3 -cpp -lm -lz -fno-align-commons
+FC := $(shell ../crank/configure_compiler_fortran.sh)
+FFLAGS= $(shell ../crank/configure_compiler_fortran_Flags.sh)
 
 RM		=	rm -f
 O               =       .o
 LDFLAGS         =       $(FFLAGS) 
-LIBSHDF         =       -L/usr/local/hdf5/lib /usr/local/hdf5/lib/libhdf5hl_fortran.a /usr/local/hdf5/lib/libhdf5_hl.a /usr/local/hdf5/lib/libhdf5_fortran.a /usr/local/hdf5/lib/libhdf5.a 
-LIBSHDF         =  
 SYSTEMFILES     =       $(SRCGNU)
 
 # --------------- Files involved ------------------
@@ -28,7 +26,7 @@ endif
 
 SRC		=	VISH2p1V1.10.0.for PhyBdary-1.10.for InputEOS-1.3.for \
                   OSCARoutput.for Arsenal-0.8.for Initialization-1.03.for \
-                  InputFun-1.29RC6.for Jetoutputh5.for cornelius2.f90
+                  InputFun-1.29RC6.for cornelius2.f90
 
 INC		= 	
 
@@ -65,7 +63,7 @@ mkobjdir:
 		-@mkdir -p $(OBJDIR)
 
 $(TARGET):	$(OBJECTS)	
-		$(FC) $(LDFLAGS) $(LIBSHDF) $(OBJECTS) -o $(TARGET)
+		$(FC) $(LDFLAGS) $(OBJECTS) -o $(TARGET)
 #		strip $(TARGET)
 
 clean:		
