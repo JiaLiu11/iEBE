@@ -35,13 +35,14 @@ protected:
     int tmax, tmaxPt;
     double dT;
     double ***dndyTable;
+    double ***dndyTable_app; //store particle number table with PT_order_app=1
     double ****dndydptTable;
     double dndy;
     int Maxx,Maxy;
     int isKLN;
     double Xmin, Ymin, Xmax, Ymax;
     double PTinte, PTmax, PTmin, dpt, MaxPT;
-    int    PT_order;
+    int    PT_order, PT_order_mix, PT_order_app; //PT_order_app=1 for calculating total particle number
     double dx,dy;
     double siginNN, siginNN200;
     double rapidity;
@@ -96,7 +97,7 @@ public:
     void setRapidity(double y) {rapidity=y;}
     void generateNucleus(double b, OverLap* proj, OverLap* targ);
     void deleteNucleus();
-    void setDensity(int iy, int ipt); // ipt<0: no dN/dydpt table used
+    void setDensity(int iy, int ipt, int pt_order_mix=0); // ipt<0: no dN/dydpt table used
     void getTA2();
     int  getBinaryCollision();
     int  CentralityCut();

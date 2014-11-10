@@ -94,7 +94,7 @@ double KLNModel::getJacobian(double eta, double pt2)
 // calculates dNdy or dNdyd2pt for AB collision at rapidity y for proj/targ
 // thickness given by npart1, npart2
 // this routine is used on the MC sampled nucleon configurations
-double KLNModel::getdNdy(double y, double npart1, double npart2, double pt, int pt_order)
+double KLNModel::getdNdy(double y, double npart1, double npart2, double pt, int pt_order, int pt_order_mix)
 {
   kln_global = this;
   Npart1=npart1;
@@ -102,6 +102,7 @@ double KLNModel::getdNdy(double y, double npart1, double npart2, double pt, int 
   rapidity=y;
   partonPt=pt;  // if >0 then pt is fixed, no integration
   PT_order=pt_order;
+  PT_order_mix = pt_order_mix;
   double trEtaY=1.0;
   double result=0.0;
   // MC integration over kt, pt, phi using bases()
@@ -258,10 +259,16 @@ double KLNModel::func(double* x)
   double result = alp*fnc; //alpha_s*phi_A*phi_B
   if (partonPt < 0.0)
   {
-    if(PT_order==2)
+    if(PT_order==2 and PT_order_mix<=0)
     {
       result *= (Ptmax-Ptmin)*pt*pt; // pt^2 dpt for Tmn lookup table and fast free-streaming & matching calculation
-    }    
+    } 
+    else if(PT_order==1 and PT_order_mix>0)   
+    {
+      result *= (Ptmax-Ptmin)*pt; // pt dpt for Tmn lookup table and fast free-streaming & matching calculation
+                                  // if work in PT_order_mix=1 mode, 2*M_PI should be dissmissed. 
+                                  //Since the phi integration would be done while free-streaming.
+    }       
     else
       result *= 2.0*M_PI*(Ptmax-Ptmin)*pt; // d^2pT integration
   }

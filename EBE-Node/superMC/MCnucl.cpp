@@ -46,13 +46,19 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in)
   PTinte = paraRdr->getVal("PT_flag");
   PTmax  = paraRdr->getVal("PT_Max");
   PTmin  = paraRdr->getVal("PT_Min");
+  PT_order_mix = paraRdr->getVal("pT_order_mix");
   dpt = paraRdr->getVal("d_PT");
   MaxPT=(int)((PTmax-PTmin)/dpt+0.1)+1;
-  if(PTinte<0)
-      PT_order = paraRdr->getVal("PT_order");   
+
+  if(PTinte>0 and PT_order_mix<=0)
+      PT_order = paraRdr->getVal("PT_order");  
+  else if(PTinte>0 and PT_order_mix>0) 
+      {
+        PT_order = paraRdr->getVal("PT_order"); 
+        PT_order_app = 1;  //do pt order=1 integration along with order=2.
+      }
   else
       PT_order = 1; //does not apply when there is no PT integration
-
   //.... NN cross sections in mb
   double ecm = paraRdr->getVal("ecm");
   double sig = hadronxsec::totalXsection(200.0,0);
@@ -92,6 +98,7 @@ MCnucl::MCnucl(ParameterReader* paraRdr_in)
 
 
   dndyTable=0;    // lookup table pointers not valid yet
+  dndyTable_app=0;
   dndydptTable=0;
   overSample=1;  // default: no oversampling
   binRapidity = paraRdr->getVal("ny");
@@ -137,6 +144,14 @@ MCnucl::~MCnucl()
       delete [] dndyTable[iy];
     }
     delete [] dndyTable;
+  }
+
+  if(dndyTable_app) {
+    for(int iy=0;iy<binRapidity;iy++) {
+      for(int j=0;j<tmax;j++) delete [] dndyTable_app[iy][j];
+      delete [] dndyTable_app[iy];
+    }
+    delete [] dndyTable_app;
   }
 
   if(dndydptTable) {
@@ -490,7 +505,7 @@ void MCnucl::getTA2()
 
 // --- initializes dN/dyd2rt (or dEt/...) on 2d grid for rapidity slice iy
 //     and integrates it to obtain dN/dy (or dEt/dy) ---
-void MCnucl::setDensity(int iy, int ipt)
+void MCnucl::setDensity(int iy, int ipt, int pt_order_mix)
 {
   // which_mc_model==1 -> KLN-like
   if (which_mc_model==1 && ipt>=0 && (dndydptTable==0)) {
@@ -500,12 +515,17 @@ void MCnucl::setDensity(int iy, int ipt)
   }
 
   // which_mc_model==1 -> KLN-like
-  if (which_mc_model==1 && ipt<0 && (dndyTable==0)) {
+  if (which_mc_model==1 && ipt<0 && (dndyTable==0) && pt_order_mix<=0) {
     cout <<
      "ERROR in MCnucl::setDensity() : pt-integrated yields require dndyTable !" << endl;
     exit(0);
   }
 
+  if (which_mc_model==1 && ipt<0 && (dndyTable_app==0) && pt_order_mix>0) {
+    cout <<
+     "ERROR in MCnucl::setDensity() : pt-integrated yields require dndyTable_app with pT_order=1!" << endl;
+    exit(0);
+  }
   double tblmax=0, table_result=0;
 
   rapidity=rapMin + (rapMax-rapMin)/binRapidity*iy;
@@ -530,9 +550,18 @@ void MCnucl::setDensity(int iy, int ipt)
         int i = floor(di); int j = floor(dj);
         if (ipt<0) // without pt dependence
         {
-          table_result = sixPoint2dInterp(di-i, dj-j, // x and y value, in lattice unit (dndyTable_step -> 1)
-          dndyTable[iy][i][j], dndyTable[iy][i][j+1], dndyTable[iy][i][j+2], dndyTable[iy][i+1][j], dndyTable[iy][i+1][j+1], dndyTable[iy][i+2][j]);
-          rho->setDensity(iy,ir,jr,table_result);
+          if(pt_order_mix<=0)
+          {
+            table_result = sixPoint2dInterp(di-i, dj-j, // x and y value, in lattice unit (dndyTable_step -> 1)            
+                dndyTable[iy][i][j], dndyTable[iy][i][j+1], dndyTable[iy][i][j+2], dndyTable[iy][i+1][j], dndyTable[iy][i+1][j+1], dndyTable[iy][i+2][j]);
+            rho->setDensity(iy,ir,jr,table_result);
+          }
+          else
+          {
+            table_result = sixPoint2dInterp(di-i, dj-j, // x and y value, in lattice unit (dndyTable_step -> 1)
+                dndyTable_app[iy][i][j], dndyTable_app[iy][i][j+1], dndyTable_app[iy][i][j+2], dndyTable_app[iy][i+1][j], dndyTable_app[iy][i+1][j+1], dndyTable[iy][i+2][j]);
+            rho->setDensity(iy,ir,jr,table_result);
+          }
         }
         else // with pt dependence
         {
@@ -701,6 +730,12 @@ void MCnucl::makeTable()
     for(int j=0;j<tmax;j++) dndyTable[iy][j] = new double [tmax];
   }
 
+  dndyTable_app = new double** [binRapidity];
+  for(int iy=0;iy<binRapidity;iy++) {
+    dndyTable_app[iy] = new double* [tmax];
+    for(int j=0;j<tmax;j++) dndyTable_app[iy][j] = new double [tmax];
+  }
+
 int progress_counter = 0, progress_percent = 0, last_update = 0;
 //===========================================================================
   for(int iy=0;iy<binRapidity;iy++) { // loop over rapidity bins
@@ -711,13 +746,25 @@ int progress_counter = 0, progress_percent = 0, last_update = 0;
       for(int j=0;j<tmax;j++) { // loop over targ thickness
         double ta2 = dT*j;
         if(i>0 && j>0) {  // store corresponding dN/dy in lookup table
-          // small-x gluons via kt-factorization
+          // small-x gluons via kt-factorization       
           dndyTable[iy][i][j] = kln->getdNdy(y,ta1,ta2, -1, PT_order); 
+          if(PT_order_mix>0)
+            dndyTable_app[iy][i][j] = kln->getdNdy(y,ta1,ta2, -1, PT_order_app, PT_order_mix); 
           // add large-x partons via DHJ formula if required
           if (val)
+          {
             dndyTable[iy][i][j] += val->getdNdy(y,ta1,ta2);
+            if(PT_order_mix>0)
+              dndyTable_app[iy][i][j] += val->getdNdy(y,ta1,ta2);
+          }
           //cout << ta1 << ", " << ta2 << ", " << dndyTable[iy][i][j] << endl;
-        } else dndyTable[iy][i][j] = 0.0;
+        } 
+        else 
+        { 
+          dndyTable[iy][i][j] = 0.0;
+          if(PT_order_mix>0)
+            dndyTable_app[iy][i][j] = 0.0;
+        }
       progress_counter++;
       progress_percent = (progress_counter*100) / (binRapidity*tmax*tmax);
       if(((progress_percent%10) == 0) && (progress_percent != last_update))
@@ -733,6 +780,8 @@ int progress_counter = 0, progress_percent = 0, last_update = 0;
   cout << "MCnucl::makeTable(): done" << endl << endl;
 
   dumpdNdyTable4Col("data/dNdyTable.dat", dndyTable, 0);
+  if(PT_order_mix>0)
+    dumpdNdyTable4Col("data/dNdyTable_app.dat", dndyTable_app, 0);
 }
 
 
@@ -746,8 +795,8 @@ void MCnucl::makeTable(double ptmin, double dpt, int iPtmax)
 
   dT=10.0/siginNN/overSample;   // elementary thickness step
   if (shape_of_nucleons>=2 && shape_of_nucleons<=9) {  // Gaussian nucleons require finer steps
-    tmax = paraRdr->getVal("tmax_subdivition")*(tmax -1 ) + 1;
-    dT /= paraRdr->getVal("tmax_subdivition");
+    tmax = paraRdr->getVal("tmax_subdivision")*(tmax -1 ) + 1;
+    dT /= paraRdr->getVal("tmax_subdivision");
   }
 
   // range of thicknesses for pt dependent lookup table
@@ -765,7 +814,6 @@ void MCnucl::makeTable(double ptmin, double dpt, int iPtmax)
         dndydptTable[iy][j][i] = new double [iptmax];
     }
   }
-
 
 int progress_counter = 0, progress_percent = 0, last_update = 0;
 //===========================================================================

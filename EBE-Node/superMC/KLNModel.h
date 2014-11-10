@@ -21,6 +21,7 @@ private:
   int    dEtdy;        // =1: calculate dE/dy
   double partonPt;    // produce parton with fixed pt
   int    PT_order;    //order of pt in KLN pt integration  
+  int    PT_order_mix;
   double g2hfac;      // g-->hadr conversion factor
   double alphaS;      // alpha strong for fixed coupling case
   double lambda;
@@ -34,7 +35,6 @@ private:
   double rapidity;
   double transEtaY;
 
-
  public:
   static double Nc;
   static double Nf;
@@ -47,7 +47,7 @@ private:
   KLNModel(double srt,int mode,UnintegPartonDist* f);
   virtual ~KLNModel();
 
-  double getdNdy(double y,double npart1,double npart2, double pt=-1.0, int pt_order=1);
+  double getdNdy(double y,double npart1,double npart2, double pt=-1.0, int pt_order=1, int pt_order_mix=0);
   inline double getAlphaStrong(const double q2);
 
   double SaturationScale(double x,double npart);

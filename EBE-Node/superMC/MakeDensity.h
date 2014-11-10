@@ -37,6 +37,7 @@ protected:
   double Alpha;
   double finalFactor;
   double PTinte, PTmax, PTmin, dpt, MixedMode;
+  int PT_order_mix;
   EOS eos;
   int Operation;
 
