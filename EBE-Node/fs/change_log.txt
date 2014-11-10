@@ -1,0 +1,239 @@
+commit cf5a8e97573093c7193980e066acfe38a58724a0
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Fri Apr 4 10:31:39 2014 -0400
+
+    Bug fix: set order to 3 when calculating epx_1.
+
+commit 56aee3f0135e14ca90440c61b90c09f5fd692b95
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Fri Mar 7 13:51:12 2014 -0500
+
+    Bug fix:   dEdydphipTable sets to zero when it is initialized.
+
+commit 907a1a28ceed0090485bec4ad1c41035a6c0b229
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Fri Jan 31 14:32:17 2014 -0500
+
+    Bug fix: eccentricity out put bug fixed.
+
+commit 8b7beec1cd4bd8a28fd14b3db34fcb45cf491756
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Fri Jan 31 10:30:32 2014 -0500
+
+    Bug fix: include gluon degeneracy in T^munu and dEdydphip calculation.
+
+commit fdddcd211494687cb98326db40b8c3c8de64ea86
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Thu Jan 30 16:31:27 2014 -0500
+
+    Bug fix: there should be no prefactor in front of dEdydphip calculation.
+
+commit dab0063129fcb69697000dc28ee5a609771fe701
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Tue Jan 28 12:32:53 2014 -0500
+
+    Output eccentricity from order 0 to order 9. Epx_initial.dat format
+    changes accordingly.
+
+commit 83f86751d9d4ae0758c09ee709a268443becd22d
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Wed Jan 22 10:10:31 2014 -0500
+
+    fixed a bug in the calculation of dEdyd2rdphip table, now the unit
+    is correct.
+
+commit 4050ca77dad2d32cd90de0e67434e4a23dd5c399
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Tue Jan 21 18:19:10 2014 -0500
+
+    Addtional option to get dE/dyd^2rdphip.
+
+commit 8dd608fff7f9c386f4c1b83bf43c6793eac7f07c
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Thu Sep 26 09:48:13 2013 -0400
+
+    runable version, clean up the folder.
+
+commit e4bee0d14d0b8146d25e186757934d2c7f4abb65
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Wed Sep 18 13:26:21 2013 -0400
+
+    output phi2 and phi3 of the initial profile.
+    Formular: arctan(epx.img/epx.real)/order + pi/order
+
+commit 8b7ed1e4850f72390b2794fb1b70a8e20cd17a8a
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Fri Aug 30 15:08:04 2013 -0400
+
+    running version of fs
+
+commit 038b8135768ac8b182cac87cb62360096d7173cb
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Fri May 31 11:59:07 2013 -0400
+
+    store all ecctricities at tau0 and store them at data/Epx_inital.dat
+
+commit f7b3fa1352c05fe88124c26e966869d6c53b06f7
+Merge: a1da060 2e08874
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Mon May 27 16:54:26 2013 -0400
+
+    Merge branch 'develop_cml'
+    
+    Conflicts:
+    	make.sh
+
+commit 2e08874678a5f3b26b1b21c52806d243387417b1
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Mon May 27 15:55:05 2013 -0400
+
+    use zhi's parameterReader class to read in parameters from data file
+    *LMParameters.dat. checked!
+    Introduce tau0 as the start of free-streaming. Taui is the beginning of
+    matching time.
+
+commit aa29c2baabe05eb726d6b8118dc99fa752749d69
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Mon May 27 14:22:05 2013 -0400
+
+    energy conservation checked. T00 decomposition checked!
+
+commit fbec8066539d8dccc74629c4f6a99da91065d89c
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Tue May 21 16:10:49 2013 -0400
+
+    total energy conservation checked. main program will delete the folder and
+    then write data
+
+commit 4eb15addbc4aa3cb40a43884f711b4b51399e438
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Tue May 21 13:35:37 2013 -0400
+
+    put result nicely in a folder
+
+commit d9c09ceae4533eab1a9db3d2ca5706e37a6aefc2
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Tue May 21 10:36:52 2013 -0400
+
+    fixed 1/tauf
+
+commit 510e91116017095d3e95ce7597ded95790eef701
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Mon May 20 14:09:38 2013 -0400
+
+    add in python script
+
+commit 2265347bfab25153f9048dc03244af5b771631ad
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Mon May 20 09:48:28 2013 -0400
+
+    mend
+
+commit 10150743fdd1bbc2f815414277fad2d814f22750
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Sun May 19 18:34:56 2013 -0400
+
+    try command line to control the number of events
+
+commit af919d8258b14c2e9cbd2a6da7527b57f39c571e
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Fri May 17 17:51:13 2013 -0400
+
+    cure memory leakage
+
+commit 75c4abde9ba095166bdb8e10bc0fae7e242f32e4
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Fri May 17 16:33:25 2013 -0400
+
+    as the last version
+
+commit ec2724dada9d112812d5efde16fb7e2404ee10a8
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Fri May 17 15:34:50 2013 -0400
+
+    workable version, only output eccentricity; set outputdata=true
+    to print out all data tables.
+
+commit ac0cae1dfe195ce74be0eb5973ed2c349e2a1add
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Thu May 16 19:29:54 2013 -0400
+
+    forbid interpolating to negative value of dN/dyd^2r table. did not match matlab result
+
+commit c62dc69dd57453b5e872a6b46802374684b798a7
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Thu May 16 16:20:18 2013 -0400
+
+    still testing
+
+commit 25507f578ddcd734c1110b425a1786bce8c2c980
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Thu May 16 13:53:47 2013 -0400
+
+    check bulk pi
+
+commit 98de7b8a6868aa3b265cdd58807582d9158953eb
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Thu May 16 10:47:35 2013 -0400
+
+    revised
+
+commit b9a19bcfba8b4826fbd12190b1fdeb1866f00ca9
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Thu May 16 09:39:42 2013 -0400
+
+    in comparing
+
+commit 9b3b10b9b64ddf407979496497ba45fef053f37f
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Thu May 16 08:52:34 2013 -0400
+
+    tiny modification
+
+commit af0b677ff907d3d42f022f5b4274a244aa15524a
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Wed May 15 18:07:02 2013 -0400
+
+    runable version, precision for t00 ~10e-5? needs check
+
+commit 80631bc71f148485309ebd9001736932c9d286c7
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Wed May 15 18:00:43 2013 -0400
+
+    free stream to tau=1.2fm/c for debugging
+
+commit 9268b4997f74afdd0b7519ac751090d1446e42c3
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Wed May 15 17:20:20 2013 -0400
+
+    test version
+
+commit e890aa105e4577171a9d033da24390610a889297
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Wed May 15 14:35:44 2013 -0400
+
+    test
+
+commit a1da06072de591e337bb62dfbe4b4467aba7ea85
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Wed May 15 14:22:36 2013 -0400
+
+    test
+
+commit 271e774b0fdad348655409837e149f5cf894ec9d
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Wed May 15 14:03:59 2013 -0400
+
+    testw
+
+commit 377e9b84afaad60c059e643642e5d78b5a4cdd88
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Wed May 15 12:50:11 2013 -0400
+
+    revised version of fs and ldmatching, needs check
+
+commit 4876fd7890a5bd2598f54048a9eaaf6e9debcdf4
+Author: Jia Liu <liu.2053@osu.edu>
+Date:   Tue May 14 09:48:43 2013 -0400
+
+    This is the first version

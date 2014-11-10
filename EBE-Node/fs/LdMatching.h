@@ -1,5 +1,5 @@
 /* For given gluon density distribution, dN/dy_d^2r_d^2Pt, calculate energy momentum tensor
-T^{mu nu}. Then use Landau matching conditions to get energy density, velocity profile, 
+T^{mu nu}. Then use Landau matching conditions to get energy density, velosity profile, 
 pressure at z=0 plane. To accomplish all, an input of EOS is necessary. 
 */
 
@@ -40,11 +40,18 @@ private:
 	int    Maxx, Maxy;
 	double Tau0, Taui, Tauf, Dtau, delta_tau;
 	int EOS_type;
+    bool dEdyd2rdphip_option;
+    double**** dEdyd2rdphipTable;
+    double*** dEdyd2rTable;
+    double** dEdydphipTable;
+    int phip_order;
+    double sfactor;   //rescaling factor for T^munu
+    double gluon_prefactor; //prefactor for gluon field: degeneracy/(2pi)^3
+    
 	EOS eos;
     bool outputData;
     string Result_Dir, Dst_Folder;
-    double event_phi2, event_phi3; //store the spatial angle phi2 and phi3 
-
+    int phin_range;  //range of phi_n: 0 to phin_range
     void findCM_ed(const int iRap = 0);  //find the center of the profile
     //A general function to shift energy density table to a new center (x0, y0) and/or rotate phi angle clockwisely
     double getShiftedProfile(double ***data, int i, int j, double x0, double y0, 
@@ -60,7 +67,9 @@ public:
     void MultiMatching(string filename);
 
 	void ReadTable(string filename);
+    void ReaddETable(string filename);
     void CalTmunu(const int iRap); 
+    void caldEdyd2rdphip(const int iRap);
     void Matching_eig(const int nrap=1);
     //useful routines for matrix manipulations
     void Lower_matrix_single(gsl_matrix *dest, gsl_matrix *src);
@@ -74,7 +83,7 @@ public:
     void CalPresTable(const int nrap=1);
     void CalVis2Ideal_Ratio(const int iRap=0);
     void GenerateSdTable(const int nrap = 1);
-    double getEpx(int n, const int iRap = 0);         //calculate eccentricity in the free-streaming stage
+    double getEpx(int n, double* phin_tbl,const int iRap = 0);         //calculate eccentricity in the free-streaming stage
 
     // void OutputTable(const char *filename, const int iRap);
     void OutputTable_ux(const char *filename, const int iRap=0);
@@ -84,7 +93,7 @@ public:
 
     //for debugging
     void OutputTmnTable(const char *filename,const int iRap, const int mu, const int nu);
-    void Output4colTable_visratio(const char *filename, const int iRap);
+    void OutputVisRatio(const char *filename, const int iRap=0);
 
     void  OutputTable_ed(const char *filename, const int iRap);
     void  OutputTable_Sd(const char *filename, const int iRap=0);
@@ -95,9 +104,14 @@ public:
     // void  Test_piSq_part(const int iRap=0);
     void  Output_picontract_comp(const char *filename, const int iRap=0);
     void  OutputTables_Pimn(const int iRap=0);
-
+    void  OutputTable_3D(const char *filename, double**** data, int maxi, int maxj, int maxk, const int iRap=0);
+    void  OutputTable_1D(const char *filename, double** data, int maxi, const int iRap=0);
     double getEpx_test(const int irap=1);
-
+    inline string parseString(string input, string delimiter) //extract the string before delimiter
+    {
+        string result = input.substr(0, input.find(delimiter));
+        return result;
+    }
 };
 
 #endif

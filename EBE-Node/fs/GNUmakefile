@@ -1,5 +1,5 @@
 # ===========================================================================
-#  Makefile freestreaming                             Chun Shen Mar. 19, 2014
+#  Makefile free-streming                              Jia Liu Apr. 04, 2014
 # ===========================================================================
 ##
 ##  Environments :	MAIN	= 	main sourcefile	
@@ -10,12 +10,12 @@
 ##			distclean	remove all objectsfiles and binaries
 ##  
 
-CC := g++
-CFLAGS= -O3 $(shell gsl-config --cflags)
+CC := $(shell ../crank/configure_compiler_C++.sh)
+CFLAGS= $(shell ../crank/configure_compiler_C++_Flags.sh)
 
 RM		=	rm -f
 O               =       .o
-LDFLAGS         =       $(CFLAGS) $(shell gsl-config --libs)
+LDFLAGS         =       $(CFLAGS)
 SYSTEMFILES     =       $(SRCGNU)
 
 # --------------- Files involved ------------------
@@ -24,13 +24,11 @@ ifeq "$(MAIN)" ""
 MAIN		=	lm.e
 endif
 
-SRC		=	LdMatching.cpp Freestreaming.cpp CellData.cpp lmtest.cpp \
-                  EOS.cpp arsenal.cpp mistools.cpp gauss_quadrature.cpp \
-                  ParameterReader.cpp
+SRC		=	main.cpp arsenal.cpp CellData.cpp EOS.cpp Freestreaming.cpp \
+			gauss_quadrature.cpp LdMatching.cpp mistools.cpp ParameterReader.cpp \
 
-INC		= 	LdMatching.h CellData.h Freestreaming.h Table.h \
-                  gauss_quadrature.h EOS.h LdMatching.h arsenal.h mistools.h \
-                  ParameterReader.h
+INC		= 	arsenal.h CellData.h EOS.h Freestreaming.h \
+			gauss_quadrature.h LdMatching.h mistools.h ParameterReader.h\
 
 
 # -------------------------------------------------
@@ -63,7 +61,7 @@ mkobjdir:
 		-@mkdir -p $(OBJDIR)
 
 $(TARGET):	$(OBJECTS)	
-		$(CC) $(OBJECTS) -o $(TARGET) $(LDFLAGS) 
+		$(CC) $(LDFLAGS) $(OBJECTS) -o $(TARGET)
 #		strip $(TARGET)
 
 clean:		
@@ -77,12 +75,9 @@ install:	$(TARGET)
 		cp $(TARGET) $(INSTPATH)
 
 # --------------- Dependencies -------------------
-./LdMatching.cpp : LdMatching.h Freestreaming.h CellData.h EOS.h ParameterReader.h gauss_quadrature.h mistools.h arsenal.h 
-./Freestreaming.cpp : Freestreaming.h gauss_quadrature.h mistools.h arsenal.h
-./CellData.cpp : CellData.h
-./lmtest.cpp : LdMatching.h Freestreaming.h gauss_quadrature.h ParameterReader.h
-./EOS.cpp : EOS.h arsenal.h
-./arsenal.cpp : arsenal.h
-./mistools.cpp : mistools.h
-./gauss_quadrature.cpp : gauss_quadrature.h
-./ParameterReader.cpp : arsenal.h ParameterReader.h
+./EOS.cpp: arsenal.h
+./Table.cpp: arsenal.h
+./Freestreaming.cpp: gauss_quadrature.h mistools.h arsenal.h
+./LdMatching.cpp: gauss_quadrature.h mistools.h arsenal.h	
+./main.cpp: LdMatching.h Freestreaming.h gauss_quadrature.h ParameterReader.h
+

@@ -474,7 +474,7 @@ def hydro_with_pre_equilbirium(aFile):
     # then move pre-equilibrium results to hydro folder
     for aFile in glob(path.join(pre_equilibrium_results_directory, 
                                 preEquilibriumControl['resultFiles'])):
-        file_name = aFile.split('/')[-1].split('kln')[0] + 'kln.dat'
+        file_name = aFile.split('/')[-1]
         move(aFile, path.join(hydroICDirectory, file_name))
     # form assignment string
     assignments = formAssignmentStringFromDict(hydroParameters)

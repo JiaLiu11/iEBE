@@ -47,7 +47,7 @@ public:
 	~FreeStrm();
 
     void CopyTable(double ***source);  //copy data table from outside
-	double GetDensity(int iy, int i, int j, double phip);  //debugging
+	double GetDensity(int iy, int i, int j, double phip);  //get the free-streamed density at a certain point for a certain shifting angle
 	void ShiftDensity(const int iy, double phip);   //free stream density to another coordinate with a specific angle
 
 	void OutputTable(const char* filename, const int iy);  //output free steamed and pt integrated gluon density
