@@ -19,7 +19,7 @@ double interpLinearDirect(vector<double>* x, vector<double>* y, double xx);
 double interpLinearMono(vector<double>* x, vector<double>* y, double xx);
 double interpNearestDirect(vector<double>* x, vector<double>* y, double xx);
 double interpNearestMono(vector<double>* x, vector<double>* y, double xx);
-
+double interpLinearDirect_extrap(vector<double>* x, vector<double>* y, double xx);
 double invertFunc(double (*func)(double), double y, double xL, double xR, double dx, double x0, double relative_accuracy=1e-10);
 
 double invertTableDirect_hook(double xx);

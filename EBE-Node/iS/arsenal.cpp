@@ -93,7 +93,36 @@ double interpCubicDirect(vector<double>* x, vector<double>* y, double x0)
 
 }
 
+//**********************************************************************
+double interpLinearDirect_extrap(vector<double>* x, vector<double>* y, double x0)
+// Returns the interpreted value of y=y(x) at x=x0 using linear interpolation method.
+// Enable linear extrapolation if x0 is out of boundary.
+// -- x,y: the independent and dependent double x0ables; x is assumed to be equal spaced and increasing
+// -- x0: where the interpolation should be performed
+{
+  long size = x->size();
+  if (size==1) {cout<<"interpLinearDirect warning: table size = 1"<<endl; return (*y)[0];}
+  double dx = (*x)[1]-(*x)[0]; // increment in x
 
+  // if close to left end:
+  if (abs(x0-(*x)[0])<dx*1e-30) return (*y)[0];
+
+  // find x's integer index
+  long idx = floor((x0-(*x)[0])/dx);
+  if (idx<0 || idx>=size-1)
+  {
+    // cout    << "interpLinearDirect: x0 out of bounds." << endl
+    //         << "x ranges from " << (*x)[0] << " to " << (*x)[size-1] << ", "
+    //         << "x0=" << x0 << ", " << "dx=" << dx << ", " << "idx=" << idx << endl;
+    if(idx<0)
+      return (*y)[0] + ((*y)[1]-(*y)[0])/dx*(x0-(*x)[0]);
+    else
+      return (*y)[size-1] + ((*y)[size-1]-(*y)[size-2])/dx*(x0-(*x)[size-1]);
+  }
+
+  return (*y)[idx] + ((*y)[idx+1]-(*y)[idx])/dx*(x0-(*x)[idx]);
+
+}
 
 
 //**********************************************************************

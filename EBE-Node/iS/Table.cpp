@@ -256,6 +256,9 @@ double Table::interp(long colX, long colY, double xx, int mode)
     case 11:
       return interpNearestMono((*data)[colX-1], (*data)[colY-1], xx);
       break;
+    case 14:
+      return interpLinearDirect_extrap((*data)[colX-1], (*data)[colY-1], xx);
+      break;
     default:
       cout << "Table::interp error: mode parameter " << mode << " not recogonized." << endl;
       return 0.0;

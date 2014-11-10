@@ -1,3 +1,5 @@
 results/dN_ptdptdphidy.dat    **spectra-file
 results	                   **output
- 15                       **Monte-Carlo-number-of-lightest-particleto-calculate 
+ 211                       **Monte-Carlo-number-of-lightest-particleto-calculate 
+EOS/numbers.dat        **output-file_from_spectra.f
+

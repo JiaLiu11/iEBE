@@ -14,13 +14,13 @@
 #include "arsenal.h"
 
 #define AMOUNT_OF_OUTPUT 0 // smaller value means less outputs
-#define F0_IS_NOT_SMALL 0 // set to 0 to agree with Azspectra; set to 1 for reality
-#define USE_HISTORIC_FORMAT 1 // 0: use new way of outputting
+#define F0_IS_NOT_SMALL 1 // set to 0 to agree with Azspectra; set to 1 for reality
+#define USE_HISTORIC_FORMAT 0 // 0: use new way of outputting
 #define GROUPING_PARTICLES 1 // set to 1 to perform calculations for similar particles together
 #define PARTICLE_DIFF_TOLERANCE 0.01 // particles with mass and chemical potential (for each FZ-cell) difference less than this value will be considered to be identical (b/c Cooper-Frye)
 #define INCLUDE_DELTAF 1 // include delta f correction to particle distribution function in Cooper-Frye Formula
 #define INCLUDE_BULKDELTAF 1 // include delta f correction to particle distribution function in Cooper-Frye Formula
-#define CALCULATEDED3P false // calculate transverse energy distribution E*dE/d^3p from Cooper-Frye formula
+#define CALCULATEDED3P true // calculate transverse energy distribution E*dE/d^3p from Cooper-Frye formula
 
 using namespace std;
 
@@ -268,13 +268,23 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy(int particle_idx)
                   double deltaf = (1 - F0_IS_NOT_SMALL*sign*f0)*Wfactor*deltaf_prefactor;
                   double bulk_deltaf = -(1. - F0_IS_NOT_SMALL*sign*f0)*bulkPi*(bulkvisCoefficients[0]*mass*mass + bulkvisCoefficients[1]*pdotu + bulkvisCoefficients[2]*pdotu*pdotu);
                   double result;
-                  if(1 + deltaf + bulk_deltaf < 0.0) //set results to zero when delta f turns whole expression to negative
-                     result = 0.0;
-                  else
+                  //if(1 + deltaf + bulk_deltaf < 0.0) //set results to zero when delta f turns whole expression to negative
+                  //   result = 0.0;
+                  //else
                      result = prefactor*degen*f0*(1. + deltaf + bulk_deltaf)*pdsigma*tau;
 
                   dN_ptdptdphidy_tmp += result*delta_eta;
-                  if(CALCULATEDED3P) dE_ptdptdphidy_tmp += result*delta_eta*mT;
+                  //if(CALCULATEDED3P) dE_ptdptdphidy_tmp += result*delta_eta*mT;
+                  if(CALCULATEDED3P) 
+                  {
+                    // energy from ideal and shear viscous part
+                    double result_ideal_shear   = prefactor*degen*f0*(1+deltaf)*pdsigma*tau;      
+                    // get bulk part energy
+                    double deltasigma = tau*(da0*(1-gammaT*gammaT)-da1*gammaT*gammaT*vx-da2*gammaT*gammaT*vy);
+                    double pdeltap = mass*mass - pdotu*pdotu;
+                    double result_bulk  = 1.0/3.0*prefactor*degen*deltasigma*pdeltap*f0*bulk_deltaf;                   
+                    dE_ptdptdphidy_tmp += result_ideal_shear*delta_eta*pt + result_bulk*delta_eta;
+                  }                  
               } // k
           } // l
 
@@ -780,12 +790,26 @@ void EmissionFunctionArray::getbulkvisCoefficients(double Tdec, double* bulkvisC
    if(INCLUDE_BULKDELTAF)
    {
       double Tdec_fm = Tdec/hbarC;  // [1/fm]
+      
+      double Tdec_fm_table_min = bulkdf_coeff->get(1, 1);
+      long bulkdf_nrows = bulkdf_coeff->getNumberOfRows();
+      double Tdec_fm_table_max = bulkdf_coeff->get(1, bulkdf_nrows);
+      double Tdec_fm_table_step = bulkdf_coeff->get(1, 2)-bulkdf_coeff->get(1, 1);
 
       // load from file
-      bulkvisCoefficients[0] = bulkdf_coeff->interp(1, 2, Tdec_fm, 5)/pow(hbarC, 3);  //B0 [fm^3/GeV^3]
-      bulkvisCoefficients[1] = bulkdf_coeff->interp(1, 3, Tdec_fm, 5)/pow(hbarC, 2);  // D0 [fm^3/GeV^2]
-      bulkvisCoefficients[2] = bulkdf_coeff->interp(1, 4, Tdec_fm, 5)/pow(hbarC, 3);  // E0 [fm^3/GeV^3]
-      
+      if( (Tdec_fm < Tdec_fm_table_min-Tdec_fm_table_step*1e-30) || 
+            (Tdec_fm > Tdec_fm_table_max+Tdec_fm_table_step*1e-30)) //linear extraploate
+      {
+        bulkvisCoefficients[0] = bulkdf_coeff->interp(1, 2, Tdec_fm, 14)/pow(hbarC, 3);  //B0 [fm^3/GeV^3]
+        bulkvisCoefficients[1] = bulkdf_coeff->interp(1, 3, Tdec_fm, 14)/pow(hbarC, 2);  // D0 [fm^3/GeV^2]
+        bulkvisCoefficients[2] = bulkdf_coeff->interp(1, 4, Tdec_fm, 14)/pow(hbarC, 3);  // E0 [fm^3/GeV^3]
+      }
+      else
+      {
+        bulkvisCoefficients[0] = bulkdf_coeff->interp(1, 2, Tdec_fm, 5)/pow(hbarC, 3);  //B0 [fm^3/GeV^3]
+        bulkvisCoefficients[1] = bulkdf_coeff->interp(1, 3, Tdec_fm, 5)/pow(hbarC, 2);  // D0 [fm^3/GeV^2]
+        bulkvisCoefficients[2] = bulkdf_coeff->interp(1, 4, Tdec_fm, 5)/pow(hbarC, 3);  // E0 [fm^3/GeV^3]
+      }
       // parameterization for mu = 0
       //bulkvisCoefficients[0] = exp(-15.04512474*Tdec_fm + 11.76194266)/pow(hbarC, 3); //B0[fm^3/GeV^3]
       //bulkvisCoefficients[1] = exp( -12.45699277*Tdec_fm + 11.4949293)/hbarC/hbarC;  // D0 [fm^3/GeV^2]

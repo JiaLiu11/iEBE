@@ -23,7 +23,7 @@
 #include "arsenal.h"
 
 #define GAUSS_N 30 // used in the integrated vn calculation with pT cut
-
+#define CALCULATEPT true // if calculate total pt of all charged particles
 using namespace std;
 
 
@@ -128,6 +128,7 @@ void calculate_flows(Table& dN_ptdptdphi, ostream& os_diff, ostream& os_inte, do
     //---------------------
     // initialization
     double normalizationi = 0;
+    double pt_normalizationi = 0;
     double vni[number_of_flows][2]; // integrated_flow numerators; 2: 0,1.real,imag
     for (int t=0; t<number_of_flows; t++) {vni[t][0]=0; vni[t][1]=0;}
 
@@ -139,7 +140,8 @@ void calculate_flows(Table& dN_ptdptdphi, ostream& os_diff, ostream& os_inte, do
             double pT = pT_tab.get(1,i+1), pT_weight = pT_tab.get(2,i+1);
 
             normalizationi += normalization[i]*pT*pT_weight;
-
+            if(CALCULATEPT)
+                pt_normalizationi += normalization[i]*pT*pT*pT_weight; //=pT*dNptdptdy
             for (int order=from_order; order<=to_order; order++)
             {
               vni[order-from_order][0] += vn[i][order-from_order][0]*pT*pT_weight;
@@ -184,7 +186,8 @@ void calculate_flows(Table& dN_ptdptdphi, ostream& os_diff, ostream& os_inte, do
 
             double normalization_pT = exp(pT_dN_vn_table.interp(1, 2, pT));
             normalizationi += normalization_pT*pT*pT_weight;
-
+            if(CALCULATEPT)
+                pt_normalizationi += normalization_pT*pT*pT*pT_weight;
             for (int order=from_order; order<=to_order; order++)
             {
                 double vn_pT_real = pT_dN_vn_table.interp(1, 2+(order-from_order)*2+1, pT);
@@ -209,7 +212,8 @@ void calculate_flows(Table& dN_ptdptdphi, ostream& os_diff, ostream& os_inte, do
     vn_inte.set(4, 1, 1);
     vn_inte.set(5, 1, 0);
     vn_inte.set(6, 1, 1);
-
+    if(CALCULATEPT)
+        vn_inte.set(3,1,pt_normalizationi); //overwrite the dummpy data in first row
     for (int t=0; t<number_of_flows; t++)
     {
     vn_inte.set(1, t+2, from_order+t);
@@ -405,7 +409,8 @@ int main()
     perform_eta_integration(&Xi_A_total_N, Xi_A_dN_dy, mass);
     calculate_and_output_spectra_and_vn(Xi_A_dN_dy, Xi_A_total_N, particle_name, mass);
 
-    //for decay photon cocktail
+
+//for decay photon cocktail
 
     //for pion 0
     double pion_zero_mass = 0.13498; mass = pion_zero_mass;
@@ -536,5 +541,8 @@ int main()
     calculate_and_output_spectra_and_vn(dN_dy, total_N, "Charged_ptcut03", 0, 9, 0.3, 3.6, 6);
     calculate_and_output_spectra_and_vn(dN_dy, total_N, "Charged_ptcut03_3", 0, 9, 0.3, 3.0, 6);
 
+    calculate_and_output_spectra_and_vn(dN_dy, total_N, "Charged_ptcut015_10", 0, 9, 0.15, 10, 6);
+    calculate_and_output_spectra_and_vn(dN_dy, total_N, "Charged_ptcut02_5", 0, 9, 0.2, 5, 6);
+    calculate_and_output_spectra_and_vn(dN_dy, total_N, "Charged_ptcut0510", 0, 9, 0.5, 10, 6);
 }
 
