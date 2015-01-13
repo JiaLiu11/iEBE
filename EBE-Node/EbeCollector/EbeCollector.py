@@ -295,6 +295,63 @@ class EbeCollector(object):
         db.closeConnection()
 
 
+    def collectEccentricitiesBeforeFS(self, folder, event_id, db):
+        """
+            This function collects initial eccentricities at initial time \tau_0 into
+            the specified SqliteDB object "db". This function fills table 
+            "eccentricities_tau0" and "ecc_id_lookup". Currently fs code only output 
+            eccentricities from energy density, ecc_id is added for compatibility.
+
+            Eccentricity file will be looked for in "folder" and
+            when filling tables the specified "event_id" will be used.
+        """
+        # collection of file name patterns, ecc_id, and ecc_type_name
+        typeCollections = (
+            (
+                1, # ecc_id
+                "sd", # ecc_type_name
+            ),
+            (
+                2,
+                "ed",
+            )
+        )
+        # now free-streaming code only support ed type eccentricities
+        typeCollections_exist = ((2,"ed"))
+        # format for the first few columns (column indices)
+        tau0_idx = 0        # initial time
+        ecc_start_idx = 4   # eccentricities begins
+      
+        # first write the ecc_id_lookup table, makes sure there is only one such table
+        if db.createTableIfNotExists("ecc_id_lookup", (("ecc_id","integer"), ("ecc_type_name","text"))):
+            for ecc_id, ecc_type_name in typeCollections:
+                db.insertIntoTable("ecc_id_lookup", (ecc_id, ecc_type_name))
+
+        # next create the eccentricity and r_integrals table, if not existing
+        db.createTableIfNotExists("eccentricities", (("event_id","integer"), ("ecc_id", "integer"), ("tau_0", "real"), ("n", "integer"), ("ecc_real","real"), ("ecc_imag","real")))
+
+        # the big loop
+        aFile = "Epx_initial.dat"
+        for ecc_id, ecc_type_name in typeCollections_exist: # loop over ecc types
+            # read the eccentricity file and write database
+            datafile_connection = open(path.join(folder, aFile), 'r')
+            data = datafile_connection.readline().strip().split() # result is a list of strings
+            data = [float(x) for x in data]
+            tau_0= data[tau0_idx]
+            # insert into eccentricity table
+            for n in range(1,10):
+                ecc_magnitude = data[ecc_start_idx+2*(n-1)]
+                ecc_angle = data[ecc_start_idx++2*(n-1)+1]
+                db.insertIntoTable("eccentricities",
+                                    (event_id, ecc_id, tau_0, n, 
+                                     ecc_magnitude*math.cos(ecc_angle),
+                                     ecc_magnitude*math.sin(ecc_angle)
+                                    )
+                                )
+        # close connection to commit changes
+        db.closeConnection()
+
+
     def collectScalars(self, folder, event_id, db):
         """
             This function collects scalar info and into the "scalars" table.
@@ -997,6 +1054,7 @@ class EbeCollector(object):
 
         # close connection to commit changes
         db.closeConnection()
+
 
     def createDatabaseFromEventFolders(self, folder, subfolderPattern="event-(\d*)", databaseFilename="CollectedResults.db", collectMode="fromUrQMD", multiplicityFactor=1.0):
         """
