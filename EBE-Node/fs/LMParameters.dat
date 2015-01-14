@@ -6,7 +6,7 @@ event_mode = 1                       # if positive, only process this one event
 nevents = 1                          # total number of events need to be processed
 
 # Additional run mode options
-dEdyd2rdphip_dist = 1                # bool: calculate energy density 
+dEdyd2rdphip_dist = 0                # bool: calculate energy density 
 
 # Grid option
 xmax = 20                            # Max grid value in x-direction with unit fm

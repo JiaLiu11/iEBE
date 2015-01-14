@@ -317,7 +317,7 @@ class EbeCollector(object):
             )
         )
         # now free-streaming code only support ed type eccentricities
-        typeCollections_exist = ((2,"ed"))
+        typeCollections_exist = [(2,"ed")]
         # format for the first few columns (column indices)
         tau0_idx = 0        # initial time
         ecc_start_idx = 4   # eccentricities begins
@@ -334,9 +334,10 @@ class EbeCollector(object):
         aFile = "Epx_initial.dat"
         for ecc_id, ecc_type_name in typeCollections_exist: # loop over ecc types
             # read the eccentricity file and write database
-            datafile_connection = open(path.join(folder, aFile), 'r')
-            data = datafile_connection.readline().strip().split() # result is a list of strings
-            data = [float(x) for x in data]
+            with open(path.join(folder, aFile), 'r') as datafile_connection:
+                data_raw = list(datafile_connection)[-1] # result for current event is at the last line
+            # refine data
+            data = [float(x) for x in data_raw.strip().split()]
             tau_0= data[tau0_idx]
             # insert into eccentricity table
             for n in range(1,10):
@@ -1221,6 +1222,18 @@ class EbeCollector(object):
         print("Collecting initial minimum bias events information from superMC outputs...")
         print("-"*80)
         self.collectInitialeccnStatistics(folder, db, multiplicityFactor, deformed) # collect eccn information from data files
+
+
+    def collectInitEcc(self, folder, event_id, databaseFilename="initEcc.db"):
+        """
+            This function collects initial eccn statistical information from fs code output to a databse
+        """
+        # the data collection loop
+        db = SqliteDB(path.join(folder, databaseFilename))
+        print("-"*80)
+        print("Collecting initial eccentricities at tau_0 information from fs outputs...")
+        print("-"*80)
+        self.collectEccentricitiesBeforeFS(folder, event_id, db) # collect eccn information from data files
 
 
     def mergeDatabases(self, toDB, fromDB):
