@@ -1095,6 +1095,10 @@ class EbeCollector(object):
             -- "fromHydroEM": eccentricity follows the format of "fromPureHydroNewStoring"
             for spectra and flow collectFlowsAndMultiplicities_photon will be 
             called with "useSubfolder=''"
+
+            -- "fromPureHydro_with_preEquilibrium": eccentricity follows the format
+             of "fromPureHydroNewStoring"for spectra and flow collectFlowsAndMultiplicities_photon 
+             will be called with "useSubfolder=''"
             
             -- "fromPureHydro11P5N":
                collect data from old 11P5N format
@@ -1165,6 +1169,16 @@ class EbeCollector(object):
                 self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=False) # collect ecc, no subfolders
                 self.collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(aSubfolder, event_id, db, useSubfolder="") # collect hadron and decay photon flow
                 self.collectFLowsAndMultiplicities_photon(aSubfolder, event_id, db, useSubfolder="") # collect thermal photon flow
+        elif collectMode == "fromPureHydro_with_preEquilibrium":
+            print("-"*60)
+            print("Using fromPureHydro_with_preEquilibrium mode")
+            print("-"*60)
+            for aSubfolder, event_id in matchedSubfolders:
+                print("Collecting %s as with event-id: %s" % (aSubfolder, str(event_id)))
+                self.collectEccentricitiesBeforeFS(aSubfolder, event_id, db)
+                self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=True) # collect ecc
+                self.collectScalars(path.join(aSubfolder,"results"), event_id, db)  # collect scalars
+            self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db) # collect flow
         elif collectMode == "fromPureHydro11P5N":
             print("-"*60)
             print("Using fromPureHydro11P5N mode")

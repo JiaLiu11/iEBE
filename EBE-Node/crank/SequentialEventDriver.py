@@ -201,6 +201,7 @@ EbeCollectorControl = {
     'executable_hydro'      :   'EbeCollectorShell_pureHydro.py',
     'executable_hydroEM'    :   'EbeCollectorShell_HydroEM.py',
     'executable_hydroEM_with_decaycocktail'    :   'EbeCollectorShell_HydroEM_with_decaycocktail.py',
+    'executable_hydro_with_preEquilibrium'     :   'EbeCollectorShell_Hydro_with_preEquilibrium.py'
 }
 EbeCollectorParameters = {
     'subfolderPattern'      :   '"event-(\d*)"',
@@ -828,7 +829,11 @@ def collectEbeResultsToDatabaseFrom(folder):
     elif simulationType == 'hydroEM_preEquilibrium':
         collectorExecutable = EbeCollectorControl['executable_hydroEM_with_decaycocktail']
         executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])
-    
+
+    elif simulationType == 'hydro_preEquilibrium':
+        collectorExecutable = EbeCollectorControl['executable_hydro_with_preEquilibrium']
+        executableString = "nice -n %d python ./" % (ProcessNiceness) + collectorExecutable + " %s %s %s" %  (folder, EbeCollectorParameters['subfolderPattern'], EbeCollectorParameters['databaseFilename'])    
+
     # execute
     run(executableString, cwd=collectorDirectory)
 
