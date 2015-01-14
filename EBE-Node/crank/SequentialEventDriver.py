@@ -89,6 +89,7 @@ superMCParameters = {
     'lambda'                        :   0.288,
     'operation'                     :   1,
     'cc_fluctuation_model'          :   6,
+    'PT_order'                      :   1,
 }
 
 preEquilibriumControl = {
@@ -913,6 +914,9 @@ def sequentialEventDriverShell():
         # print current progress to terminal
         stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
         stdout.flush()
+        # alter superMC run mode if including pre-equlibrium and use KLN initial model
+        if simulationType == "hydro_preEquilibrium" and superMCParameters['which_mc_model'] == 1 and superMCParameters['sub_model'] ==7:
+            superMCParameters['PT_order'] = 2 
         for aInitialConditionFile in generateSuperMCInitialConditions(controlParameterList['numberOfEvents']):
             # get the result folder name for storing results, then create it if necessary
             event_id += 1
@@ -964,7 +968,7 @@ def sequentialEventDriverShell():
             elif simulationType == 'hydro':
                 # perform iS calculation and resonance decays
                 iSWithResonancesWithHydroResultFiles(hydroResultFiles)
-            
+
             elif simulationType == 'hydroEM':
                 h5file = iSSeventplaneAngleWithHydroResultFiles(hydroResultFiles)
                 # perform EM radiation calculation
