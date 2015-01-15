@@ -104,7 +104,7 @@ mixedMode = 0             # if > 0, calculate both the pT-unintegrated particle 
 PT_Min = 0.1              # Minimum value of PT
 PT_Max = 12                # Maximum value of PT
 PT_order = 2              # =1 output the usual entropy/energy density profile; =2 output pT^2 instead of pT in integrand in KLN
-pT_order_mix = 1           # =1 for also calculating PT_order = 1 along with pT_order = 2 to get total particle number.
+pT_order_mix = 0           # =1 for also calculating PT_order = 1 along with pT_order = 2 to get total particle number.
 d_PT = 0.1                # Step size of PT in GeV
 
 

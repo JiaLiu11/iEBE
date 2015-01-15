@@ -65,7 +65,7 @@ superMCControl = {
     'dataDir'                       :   'data', # where initial conditions are stored, relative
     'saveICFile'                    :   True, # whether to save initial condition file
     'dataFiles'                     :   '*event_%d_*.dat', # data filenames
-    'initialFiles'                  :   '*event*_block*.dat',  #initial density profile filenames
+    'initialFiles'                  :   '*event*_block.dat',  #initial density profile filenames
     'numberOfEventsParameterName'   :   'nev',
     'executable'                    :   'superMC.e',
 }
@@ -125,7 +125,7 @@ hydroParameters = {
     'IEOS'      :   7,
     'iEin'      :   1,
     'vis'       :   0.08,
-    'iLS'       :   130,
+    'iLS'       :   200,
     'T0'        :   0.6, # tau_0
     'Edec'      :   0.3, # 0.3->160 MeV, 0.18->120 MeV
     'factor'    :   1.0,
@@ -577,10 +577,11 @@ def hydro_with_pre_equilbirium_multipleTaus(aFile):
             move(aFile, path.join(hydroICDirectory, file_name))
 
         # run hydro: form assignment string
+        hydroParameters['T0'] = taus_now
         assignments = formAssignmentStringFromDict(hydroParameters)
         # form executable string
         executableString = ("nice -n %d ./" % (ProcessNiceness) 
-                            + hydroExecutable + assignments)
+                            + hydroExecutable + assignments  +' >runlog.dat') # debug
         # execute!
         run(executableString, cwd=hydroDirectory)
 
