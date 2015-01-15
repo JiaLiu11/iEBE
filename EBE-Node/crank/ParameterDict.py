@@ -1,10 +1,10 @@
 controlParameterList = {
-    'simulation_type'       :   'hydroEM_with_decaycocktail', # 'hybrid' or 'hydro'
-    'niceness'              :   0,       # range from 0 to 19 for process priority, 0 for the highest priority
+    'simulation_type'       :   'hydro_preEquilibrium', # 'hybrid' or 'hydro'
+    'niceness'              :   10,       # range from 0 to 19 for process priority, 0 for the highest priority
 }
 
 centralityParameters = {
-    'centrality': '20-30%',  # centrality bin
+    'centrality': '10-20%',  # centrality bin
     'cut_type': 'total_entropy',
     # centrality cut variable: total_entropy or Npart
 }
@@ -24,16 +24,17 @@ superMCParameters = {
 preEquilibriumParameters = {
     'event_mode'            :    1,  
     'taumin'                :    0.6,
-    'taumax'                :    0.6,
+    'taumax'                :    0.8,
     'dtau'                  :    0.2,
 }
 
 hydroParameters = {
-    'vis'       :   0.08,
+    'vis'       :   0.2,
     'T0'        :   0.6, # tau_0
     'Edec'      :   0.18,
-    'IhydroJetoutput' :   1,  # switch for output hydro evolution history into hdf5 file
-    'InitialURead'    :   0,
+    'IhydroJetoutput' :   0,  # switch for output hydro evolution history into hdf5 file
+    'InitialURead'    :   1,
+    'factor'    :   0.01,
 }
 
 iSSParameters = {
