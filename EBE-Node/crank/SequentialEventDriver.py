@@ -100,7 +100,8 @@ preEquilibriumControl = {
     'resultDir'                     :   'data/result/event_1', # pre-equilibrium results folder
     'resultFiles'                   :   '*', # results files
     'executable'                    :   'lm.e',
-    'saveResultGlobs'               :   ['ed_profile_kln.dat', 'dec*.dat', 'ecc*.dat'], # files match these globs will be saved
+    'dataDir'                       :   'data',
+    'saveResultGlobs'               :   ['ed_profile_kln.dat', 'dec*.dat', 'ecc*.dat', 'Epx_initial.dat'], # files match these globs will be saved
 }
 preEquilibriumParameters = {
     'event_mode'            :    1,  
@@ -517,6 +518,9 @@ def hydro_with_pre_equilbirium_multipleTaus(aFile):
     pre_equilibrium_ic_directory = path.join(
         pre_equilibrium_directory, preEquilibriumControl['initialConditionDir']
     )
+    pre_equilibrium_data_directory = path.join(
+        pre_equilibrium_directory, preEquilibriumControl['dataDir'] 
+    )
     pre_equilibrium_results_directory = path.join(
         pre_equilibrium_directory, preEquilibriumControl['resultDir'] 
     )
@@ -565,11 +569,17 @@ def hydro_with_pre_equilbirium_multipleTaus(aFile):
     # execute!
     run(executableString, cwd=pre_equilibrium_directory)
 
+    # storing initial eccentricity file
+    if path.isfile(path.join(pre_equilibrium_data_directory, 'Epx_initial.dat')) and ('Epx_initial.dat' in preEquilibriumControl['saveResultGlobs']):
+        move(path.join(pre_equilibrium_data_directory, 'Epx_initial.dat'), controlParameterList['eventResultDir'])
+
     # loop over all switching times
     taus_list = np.arange(preEquilibriumParameters['taumin'], 
                         preEquilibriumParameters['taumax']+preEquilibriumParameters['dtau'],
                         preEquilibriumParameters['dtau'])
     for taus_now in taus_list:
+        cleanUpFolder(hydroICDirectory)
+        cleanUpFolder(hydroResultsDirectory)
         # move pre-equilibrium results to hydro folder
         for aFile in glob(path.join(pre_equilibrium_results_directory, '%g'%taus_now,
                                     preEquilibriumControl['resultFiles'])):
