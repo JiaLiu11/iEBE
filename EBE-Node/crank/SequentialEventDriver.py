@@ -591,7 +591,7 @@ def hydro_with_pre_equilbirium_multipleTaus(aFile):
         assignments = formAssignmentStringFromDict(hydroParameters)
         # form executable string
         executableString = ("nice -n %d ./" % (ProcessNiceness) 
-                            + hydroExecutable + assignments  +' >runlog.dat') # debug
+                            + hydroExecutable + assignments  +' >runlog.dat')
         # execute!
         run(executableString, cwd=hydroDirectory)
 
@@ -621,7 +621,7 @@ def hydro_with_pre_equilbirium_multipleTaus(aFile):
             if aFile in fsworthStoring:
                 copy(aFile, tempDir_now)   
     # yield result folders
-    for aFolder in glob(fsHydroTempDir):
+    for aFolder in glob(path.join(fsHydroTempDir, "*")):
         # check if this file worth storing, then copy to event result folder
         if not path.isdir(aFolder): continue
         yield aFolder
@@ -730,8 +730,7 @@ def iSWithResonancesWithHydroResultFolders(folderList):
         if not path.exists(aFolder):
             raise ExecutionError("Hydro result folder %s not found!" % aFolder)
         else:
-            fileList = glob(path.join(aFolder,hydroControl['resultFiles'])))
-
+            fileList = glob(path.join(aFolder,hydroControl['resultFiles']))
         # clean up operation folder
         cleanUpFolder(iSOperationDirectory)
 
@@ -1171,7 +1170,7 @@ def sequentialEventDriverShell():
             elif simulationType == 'hydro_preEquilibrium':
                 # perform iS calculation and resonance decays at multiple switching times
                 iSWithResonancesWithHydroResultFolders(hydroResultFolders)
-                
+
             # print current progress to terminal
             stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
             stdout.flush()
