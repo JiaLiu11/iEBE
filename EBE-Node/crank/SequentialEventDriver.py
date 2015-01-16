@@ -707,6 +707,57 @@ def iSWithResonancesWithHydroResultFiles(fileList):
         if aFile in worthStoring:
             move(aFile, controlParameterList['eventResultDir'])
 
+def iSWithResonancesWithHydroResultFolders(folderList):
+    """
+        Perform iS calculation using the given list of hydro result files,
+        followed by resonance calculations and iInteSp calculations.
+    """
+    ProcessNiceness = controlParameterList['niceness']
+    # set directory strings
+    iSDirectory = path.join(controlParameterList['rootDir'], iSControl['mainDir'])
+    iSOperationDirectory = path.join(iSDirectory, iSControl['operationDir']) # for both input & output
+    iSExecutables = iSControl['executables']
+    iSExecutionEntry = iSControl['entryShell']
+
+    # copy the unaltered particle list file
+    copy(path.join(iSDirectory, 'EOS', 'chosen_particles_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
+    # check executable
+    checkExistenceOfExecutables([path.join(iSDirectory, aExe) for aExe in iSExecutables])
+
+    # loop over folders with multiple switching time
+    for aFolder in folderList:
+        # get a list of all files in the current switching time result folder
+        if not path.exists(aFolder):
+            raise ExecutionError("Hydro result folder %s not found!" % aFolder)
+        else:
+            fileList = glob(path.join(aFolder,hydroControl['resultFiles'])))
+
+        # clean up operation folder
+        cleanUpFolder(iSOperationDirectory)
+
+        # check existence of hydro result files and move them to operation folder
+        for aFile in fileList:
+            if not path.exists(aFile):
+                raise ExecutionError("Hydro result file %s not found!" % aFile)
+            else:
+                move(aFile, iSOperationDirectory)
+
+        # execute!
+        run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, cwd=iSDirectory)
+        # construct save file folder
+        # get the current source folder name, which is the current taus
+        taus_now = aFolder.split('/')[-1]
+        eventResultDir_now = path.join(controlParameterList['eventResultDir'],
+                                        taus_now)
+        # save some of the important result files
+        worthStoring = []
+        for aGlob in iSControl['saveResultGlobs']:
+            worthStoring.extend(glob(path.join(iSOperationDirectory, aGlob)))
+        for aFile in glob(path.join(iSOperationDirectory, "*")):
+            if aFile in worthStoring:
+                move(aFile, eventResultDir_now)
+
+
 def iSSeventplaneAngleWithHydroResultFiles(fileList):
     """
         Perform iSS calculation using the given list of hydro result files.
@@ -1117,6 +1168,10 @@ def sequentialEventDriverShell():
                 # perform EM radiation calculation
                 photonEmissionWithHydroResultFiles(h5file)
 
+            elif simulationType == 'hydro_preEquilibrium':
+                # perform iS calculation and resonance decays at multiple switching times
+                iSWithResonancesWithHydroResultFolders(hydroResultFolders)
+                
             # print current progress to terminal
             stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
             stdout.flush()
