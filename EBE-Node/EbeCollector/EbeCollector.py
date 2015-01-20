@@ -328,7 +328,7 @@ class EbeCollector(object):
                 db.insertIntoTable("ecc_id_lookup", (ecc_id, ecc_type_name))
 
         # next create the eccentricity and r_integrals table, if not existing
-        db.createTableIfNotExists("eccentricities", (("event_id","integer"), ("ecc_id", "integer"), ("tau_0", "real"), ("n", "integer"), ("ecc_real","real"), ("ecc_imag","real")))
+        db.createTableIfNotExists("init_eccentricities", (("event_id","integer"), ("ecc_id", "integer"), ("tau_0", "real"), ("n", "integer"), ("ecc_real","real"), ("ecc_imag","real")))
 
         # the big loop
         aFile = "Epx_initial.dat"
@@ -343,7 +343,7 @@ class EbeCollector(object):
             for n in range(1,10):
                 ecc_magnitude = data[ecc_start_idx+2*(n-1)]
                 ecc_angle = data[ecc_start_idx++2*(n-1)+1]
-                db.insertIntoTable("eccentricities",
+                db.insertIntoTable("init_eccentricities",
                                     (event_id, ecc_id, tau_0, n, 
                                      ecc_magnitude*math.cos(ecc_angle),
                                      ecc_magnitude*math.sin(ecc_angle)
