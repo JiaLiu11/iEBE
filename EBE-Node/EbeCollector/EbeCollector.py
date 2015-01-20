@@ -353,6 +353,89 @@ class EbeCollector(object):
         db.closeConnection()
 
 
+    def collectEccentricitiesAndRIntegrals_withPreEq(self, folder, subfolderPattern, event_id, db, oldStyleStorage=False):
+        """
+            This function collects initial eccentricities and r-integrals into
+            the specified SqliteDB object "db" at multiple switching times. More specifically,
+            this functions fills table "ecc_id_lookup", "eccentricities", and
+            "r_integrals".
+
+            Eccentricity and r-integral files will be looked for in "folder" and
+            when filling tables the specified "event_id" will be used.
+
+            When "oldStyleStorage" is set to True, another subfolder
+            with name "results" will be appended to "folder" which will
+            be compatible to the old style storage format.
+        """
+        # get list of (matched subfolders, tau_s)
+        matchPattern = re.compile(subfolderPattern)
+        matchedSubfolders = []
+        for folder_index, aSubfolder in enumerate(listdir(folder)):
+            fullPath = path.join(folder, aSubfolder)
+            if not path.isdir(fullPath): continue # want only folders, not files
+            # for new-style calculations, folder name must match
+            matchResult = matchPattern.match(aSubfolder)
+            if matchResult: # matched!
+                if len(matchResult.groups()): # folder name contains id
+                    taus = float(matchResult.groups()[0])
+                else:
+                    taus = float(matchResult.group())
+                matchedSubfolders.append((fullPath, taus)) # matched!
+
+        # compatibility treatment
+        if oldStyleStorage: folder = path.join(folder, "results")
+        # collection of file name patterns, ecc_id, and ecc_type_name
+        typeCollections = (
+            (
+                re.compile("ecc-init-sd-r_power-(\d*).dat"), # filename pattern
+                1, # ecc_id
+                "sd", # ecc_type_name
+            ),
+            (
+                re.compile("ecc-init-r_power-(\d*).dat"),
+                2,
+                "ed",
+            )
+        )
+        # they have the following formats (column indices)
+        ecc_real_col = 0 # real part of ecc
+        ecc_imag_col = 1 # imag part of ecc
+        r_inte_col = 3 # r-integral
+
+        # first write the ecc_id_lookup table, makes sure there is only one such table
+        if db.createTableIfNotExists("ecc_id_lookup", (("ecc_id","integer"), ("ecc_type_name","text"))):
+            for pattern, ecc_id, ecc_type_name in typeCollections:
+                db.insertIntoTable("ecc_id_lookup", (ecc_id, ecc_type_name))
+
+        # next create the eccentricity and r_integrals table, if not existing
+        db.createTableIfNotExists("eccentricities", (("event_id","integer"), ("ecc_id", "integer"), ("tau_s", "real"), ("r_power", "integer"), ("n","integer"), ("ecc_real","real"), ("ecc_imag","real")))
+        db.createTableIfNotExists("r_integrals", (("event_id","integer"), ("ecc_id","integer"), ("tau_s", "real"), ("r_power","integer"), ("r_inte","real")))
+
+        # the big loop
+        for aSubfolder, taus in matchedSubfolders: # get all matched taus and folders
+            for aFile in listdir(aSubfolder): # get all file names
+                for pattern, ecc_id, ecc_type_name in typeCollections: # loop over ecc types
+                    matchResult = pattern.match(aFile) # try to match file names
+                    if not matchResult: continue # not matched!
+                    filename = matchResult.group()
+                    r_power = matchResult.groups()[0] # indicated by the file name
+                    # read the eccentricity file and write database
+                    for idx, aLine in enumerate(open(path.join(aSubfolder, filename))): # row index is "n"
+                        n = idx+1
+                        data = aLine.split()
+                        # insert into eccentricity table
+                        db.insertIntoTable("eccentricities",
+                                            (event_id, ecc_id, taus, r_power, n, float(data[ecc_real_col]), float(data[ecc_imag_col]))
+                                        )
+                        # insert into r-integrals table but only once
+                        if n==1:
+                            db.insertIntoTable("r_integrals",
+                                                (event_id, ecc_id, taus, r_power, float(data[r_inte_col]))
+                                            )
+
+        # close connection to commit changes
+        db.closeConnection()
+
     def collectScalars(self, folder, event_id, db):
         """
             This function collects scalar info and into the "scalars" table.
@@ -364,6 +447,36 @@ class EbeCollector(object):
         maxLifetime = np.max(np.loadtxt(path.join(folder, "surface.dat"))[:,1])
         db.insertIntoTable("scalars", (event_id, maxLifetime))
         # for others (future)
+
+
+    def collectScalars_withPreEq(self, folder, subfolderPattern, event_id, db):
+        """
+            This function collects scalar info and into the "scalars" table for multiple switching time.
+            The supported scalars include: lifetime of the fireball.
+        """
+        # get list of (matched subfolders, tau_s)
+        matchPattern = re.compile(subfolderPattern)
+        matchedSubfolders = []
+        for folder_index, aSubfolder in enumerate(listdir(folder)):
+            fullPath = path.join(folder, aSubfolder)
+            if not path.isdir(fullPath): continue # want only folders, not files
+            # for new-style calculations, folder name must match
+            matchResult = matchPattern.match(aSubfolder)
+            if matchResult: # matched!
+                if len(matchResult.groups()): # folder name contains id
+                    taus = float(matchResult.groups()[0])
+                else:
+                    taus = float(matchResult.group())
+                matchedSubfolders.append((fullPath, taus)) # matched!
+
+        # first write the scalar, makes sure there is only one such table
+        db.createTableIfNotExists("scalars", (("event_id","integer"), ("lifetime","real")))
+        # loop over switching time
+        for aSubfolder, taus in matchedSubfolders:
+            # for lifetime
+            maxLifetime = np.max(np.loadtxt(path.join(aSubfolder, "surface.dat"))[:,1])
+            db.insertIntoTable("scalars", (event_id, maxLifetime))
+            # for others (future)
 
 
     def collectFLowsAndMultiplicities_urqmdBinUtilityFormat(self, folder, event_id, db, multiplicityFactor=1.0):
@@ -552,6 +665,114 @@ class EbeCollector(object):
 
         # close connection to commit changes
         db.closeConnection()
+
+
+    def collectFLowsAndMultiplicities_iSFormat_withPreEq(self, folder, subfolderPattern, event_id, db, useSubfolder="spectra"):
+        """
+            This function collects integrated and differential flows data
+            and multiplicity and spectra data from "folder" into the
+            database "db" using event id "event_id" and switcing time "tau_s".
+
+            This function fills the following table: "pid_lookup",
+            "inte_vn", "diff_vn", "multiplicities", "spectra".
+
+            This funtion should only be applied to a folder where flow
+            files are generated by the iS (or iSS with calculate flow
+            mode) module as in pure hydro calculations. As such, the
+            subfolder name "useSubfolder" will be appended to "folder"
+            automatically.
+        """
+        # add one more sub-directory
+        folder = path.join(folder, useSubfolder)
+
+        # get list of (matched subfolders, tau_s)
+        matchPattern = re.compile(subfolderPattern)
+        matchedSubfolders = []
+        for folder_index, aSubfolder in enumerate(listdir(folder)):
+            fullPath = path.join(folder, aSubfolder)
+            if not path.isdir(fullPath): continue # want only folders, not files
+            # for new-style calculations, folder name must match
+            matchResult = matchPattern.match(aSubfolder)
+            if matchResult: # matched!
+                if len(matchResult.groups()): # folder name contains id
+                    taus = float(matchResult.groups()[0])
+                else:
+                    taus = float(matchResult.group())
+                matchedSubfolders.append((fullPath, taus)) # matched!        
+
+        # collection of file name patterns, pid, and particle name. The file format is determined from the "filename_format.dat" file
+        toCollect = {
+            "Charged"       :   "charged_hydro", # string in filename, particle name
+            "Charged_eta"   :   "charged_eta_hydro", # string in filename, particle name
+            "pion_p"        :   "pion_p_hydro",
+            "Kaon_p"        :   "kaon_p_hydro",
+            "proton"        :   "proton_hydro",
+            "Sigma_p"       :   "sigma_p_hydro",
+            "Xi_m"          :   "xi_m_hydro",
+            "Omega"         :   "omega_hydro",
+            "Lambda"        :   "lambda_hydro",
+            "Phi"           :   "phi_hydro",
+            "thermal_211"   :   "pion_p_thermal",
+            "thermal_321"   :   "kaon_p_thermal",
+            "thermal_2212"  :   "proton_thermal",
+            "thermal_213"   :   "rho_p_thermal",
+            "thermal_333"   :   "phi_thermal",
+        }
+        filename_inte = "%s_integrated_vndata.dat" # filename for integrated flow files, %s is the "string in filename" defined in toCollect
+        filename_diff = "%s_vndata.dat" # filename for differential flow files
+
+        # first write the pid_lookup table, makes sure there is only one such table
+        if db.createTableIfNotExists("pid_lookup", (("name","text"), ("pid","integer"))):
+            db.insertIntoTable("pid_lookup", list(self.pidDict.items()))
+
+        # next create various tables
+        db.createTableIfNotExists("inte_vn", (("event_id","integer"), ("tau_s", "real"), ("pid","integer"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("diff_vn", (("event_id","integer"), ("tau_s", "real"), ("pid","integer"), ("pT","real"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
+        db.createTableIfNotExists("multiplicities", (("event_id","integer"), ("tau_s", "real"), ("pid","integer"), ("N","real")))
+        db.createTableIfNotExists("spectra", (("event_id","integer"), ("tau_s", "real"), ("pid","integer"), ("pT","real"), ("N","real")))
+
+        # the big loop
+        for aSubfolder, taus in matchedSubfolders:
+            for particle_string_infile in toCollect.keys():
+                pid = self.pidDict[toCollect[particle_string_infile]]
+
+                # first, differential flow
+                particle_filename = path.join(aSubfolder, filename_diff % particle_string_infile)
+                if path.exists(particle_filename):
+                    # extract differential flow and spectra information
+                    diff_flow_block = np.loadtxt(particle_filename)
+                    largest_n = int(diff_flow_block.shape[1]/3) # should be an integer
+                    # write flow table
+                    for aRow in diff_flow_block:
+                        for n in range(1, largest_n):
+                            db.insertIntoTable("diff_vn",
+                                (event_id, taus, pid, aRow[0], n, aRow[3*n], aRow[3*n+1])
+                            )
+                        # write spectra table
+                        db.insertIntoTable("spectra",
+                            (event_id, taus, pid, aRow[0], aRow[2]*(2*np.pi)*aRow[0])
+                        )
+
+
+                # next, integrated flow
+                particle_filename = path.join(aSubfolder, filename_inte % particle_string_infile)
+                if path.exists(particle_filename):
+                    # extract integrated flow and multiplicity information
+                    inte_flow_block = np.loadtxt(particle_filename)
+                    largest_n = inte_flow_block.shape[0]
+                    # write flow table
+                    for n in range(1, largest_n):
+                        db.insertIntoTable("inte_vn",
+                            (event_id, taus, pid, n, inte_flow_block[n,3], inte_flow_block[n,4])
+                        )
+                    # write multiplicity table
+                    db.insertIntoTable("multiplicities",
+                        (event_id, taus, pid, inte_flow_block[0,1])
+                    )
+
+        # close connection to commit changes
+        db.closeConnection()
+
     
     def collectFLowsAndMultiplicities_iSFormat_decayphoton_Cocktail(self, folder, event_id, db, useSubfolder="spectra"):
         """
@@ -1063,7 +1284,7 @@ class EbeCollector(object):
             whose name have pattern "subfolderPattern" to a database
             with name "databaseFilename".
 
-            The "subfolderPattern" argument can be such that when it
+            The "subfolderPattern" argument can be such that when it()
             matches, if its groups()[0] exists, it will be used as event
             id, otherwise the order of the subfolder in listdir will be
             used as event id. Only folders will be matched in either
@@ -1122,6 +1343,9 @@ class EbeCollector(object):
                         event_id = folder_index
                     matchedSubfolders.append((fullPath, event_id)) # matched!
 
+        # pattern for switching time
+        subfolderPattern_taus = '\d*\.?\d+' # match integer or float
+
         # the data collection loop
         db = SqliteDB(path.join(folder, databaseFilename))
         if collectMode == "fromUrQMD":
@@ -1176,9 +1400,9 @@ class EbeCollector(object):
             for aSubfolder, event_id in matchedSubfolders:
                 print("Collecting %s as with event-id: %s" % (aSubfolder, str(event_id)))
                 self.collectEccentricitiesBeforeFS(aSubfolder, event_id, db)
-                self.collectEccentricitiesAndRIntegrals(aSubfolder, event_id, db, oldStyleStorage=True) # collect ecc
-                self.collectScalars(path.join(aSubfolder,"results"), event_id, db)  # collect scalars
-            self.collectFLowsAndMultiplicities_iSFormat(aSubfolder, event_id, db) # collect flow
+                self.collectEccentricitiesAndRIntegrals_withPreEq(aSubfolder, subfolderPattern_taus, event_id, db, oldStyleStorage=False) # collect ecc at multiple hydro starting time
+                self.collectScalars_withPreEq(path.join(aSubfolder,"results"), event_id, db)  # collect scalars
+                self.collectFLowsAndMultiplicities_iSFormat_withPreEq(aSubfolder, subfolderPattern_taus, event_id,  db, useSubfolder="") # collect flow
         elif collectMode == "fromPureHydro11P5N":
             print("-"*60)
             print("Using fromPureHydro11P5N mode")
