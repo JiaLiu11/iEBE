@@ -21,7 +21,7 @@
 #define INCLUDE_DELTAF 1 // include delta f correction to particle distribution function in Cooper-Frye Formula
 #define INCLUDE_BULKDELTAF 1 // include delta f correction to particle distribution function in Cooper-Frye Formula
 #define CALCULATEDED3P true // calculate transverse energy distribution E*dE/d^3p from Cooper-Frye formula
-
+#define CALCULATE_PARTICLE_ENERGYFLOW false // calculate the energy flow for each thermal particles
 using namespace std;
 
 
@@ -99,7 +99,7 @@ EmissionFunctionArray::EmissionFunctionArray(double particle_y_in, Table* chosen
   flow_integrated_filename_old = "results/v2data-inte.dat";
   flow_differential_filename = "results/thermal_%d_vndata.dat";
   flow_integrated_filename = "results/thermal_%d_integrated_vndata.dat";
-  if(CALCULATEDED3P)
+  if(CALCULATEDED3P && CALCULATE_PARTICLE_ENERGYFLOW)
   {
      energyflow_differential_filename_old =  "results/ET_v2data.dat";
      energyflow_integrated_filename_old = "results/ET_v2data-inte.dat";
@@ -644,7 +644,7 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy_and_flows_4all(int to_order
             of2 << "# For: " << particle->name << endl;
             of2.close();
             calculate_flows(to_order, flow_differential_filename_old, flow_integrated_filename_old);
-            if(CALCULATEDED3P)
+            if(CALCULATEDED3P && CALCULATE_PARTICLE_ENERGYFLOW)
             {
                ofstream of1(energyflow_differential_filename_old.c_str(), ios_base::app);
                of1 << "# Output for particle: " << particle->name << endl;
@@ -708,7 +708,7 @@ void EmissionFunctionArray::calculate_dN_ptdptdphidy_and_flows_4all(int to_order
                 remove(buffer_inte);
                 calculate_flows(to_order, buffer_diff, buffer_inte);
                 
-                if(CALCULATEDED3P)
+                if(CALCULATEDED3P && CALCULATE_PARTICLE_ENERGYFLOW)
                 {
                    sprintf(buffer_diff, energyflow_differential_filename.c_str(), monval);
                    remove(buffer_diff);
