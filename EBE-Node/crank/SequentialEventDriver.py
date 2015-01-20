@@ -153,7 +153,7 @@ iSSParameters = {
 iSControl = {
     'mainDir'           :   'iS',
     'operationDir'      :   'results',
-    'saveResultGlobs'   :   ['dN_ptdptdphidy.dat', '*_vndata.dat', 'v2data*'], # files in the operation directory matching these globs will be saved
+    'saveResultGlobs'   :   ['d?_ptdptdphidy.dat', '*_vndata.dat', 'v2data*'], # files in the operation directory matching these globs will be saved
     'executables'       :   ('iS.e', 'resonance.e', 'iInteSp.e'),
     'entryShell'        :   'iS_withResonance.sh',
     'preprocessPi'      :   True, # preprocess bulk and shear pressure if pre-equlibrium is included
