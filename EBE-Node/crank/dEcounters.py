@@ -18,7 +18,7 @@
 #   Jan 24, 2014     Read the 'chosen_particles_backup.dat' to maintain
 #    				 the correct matrix dimension. Commented dN calculation.
 
-import sys
+import sys,shutil
 from os import path, stat, getcwd
 import numpy as np
 
