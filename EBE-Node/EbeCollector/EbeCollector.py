@@ -1401,7 +1401,7 @@ class EbeCollector(object):
                 print("Collecting %s as with event-id: %s" % (aSubfolder, str(event_id)))
                 self.collectEccentricitiesBeforeFS(aSubfolder, event_id, db)
                 self.collectEccentricitiesAndRIntegrals_withPreEq(aSubfolder, subfolderPattern_taus, event_id, db, oldStyleStorage=False) # collect ecc at multiple hydro starting time
-                self.collectScalars_withPreEq(path.join(aSubfolder,"results"), event_id, db)  # collect scalars
+                self.collectScalars_withPreEq(aSubfolder, subfolderPattern_taus, event_id, db)  # collect scalars
                 self.collectFLowsAndMultiplicities_iSFormat_withPreEq(aSubfolder, subfolderPattern_taus, event_id,  db, useSubfolder="") # collect flow
         elif collectMode == "fromPureHydro11P5N":
             print("-"*60)
