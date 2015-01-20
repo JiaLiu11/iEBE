@@ -14,6 +14,7 @@ from shutil import move, copy, rmtree
 from glob import glob
 from subprocess import call
 import numpy as np
+import dEcounters
 
 class ExecutionError(Exception): pass # used to signal my own exception
 
@@ -155,6 +156,7 @@ iSControl = {
     'saveResultGlobs'   :   ['dN_ptdptdphidy.dat', '*_vndata.dat', 'v2data*'], # files in the operation directory matching these globs will be saved
     'executables'       :   ('iS.e', 'resonance.e', 'iInteSp.e'),
     'entryShell'        :   'iS_withResonance.sh',
+    'preprocessPi'      :   True, # preprocess bulk and shear pressure if pre-equlibrium is included
 }
 iSParameters = {}
 
@@ -719,6 +721,9 @@ def iSWithResonancesWithHydroResultFolders(folderList):
     iSExecutables = iSControl['executables']
     iSExecutionEntry = iSControl['entryShell']
 
+    # check simulation type
+    simulationType = controlParameterList['simulation_type']
+
     # copy the unaltered particle list file
     copy(path.join(iSDirectory, 'EOS', 'chosen_particles_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
     # check executable
@@ -740,6 +745,15 @@ def iSWithResonancesWithHydroResultFolders(folderList):
                 raise ExecutionError("Hydro result file %s not found!" % aFile)
             else:
                 move(aFile, iSOperationDirectory)
+
+        # pre-process decdat2.dat if pre-equilibrium is included
+        if(simulationType == "hydro_preEquilibrium" and iSControl['preprocessPi'] == True):
+            try:
+                dEcounters.preProcessDecdat2File(iSOperationDirectory)
+                print "decdat2.dat file in folder %s has been preprocessed!\n"%iSOperationDirectory
+            except:
+                print "pre-process failed at folder %s!\n"%iSOperationDirectory
+                continue
 
         # execute!
         run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, cwd=iSDirectory)
