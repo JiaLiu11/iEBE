@@ -15,6 +15,7 @@ from glob import glob
 from subprocess import call
 import numpy as np
 import dEcounters
+from sfactorUtility import sfactorFinder
 
 class ExecutionError(Exception): pass # used to signal my own exception
 
@@ -54,6 +55,7 @@ controlParameterList = {
     'combinedUrqmdFile'     :   'urqmdCombined.txt', # urqmd from all events will be combined into this file
     'buildCMD'              :   'make build',
     'cleanCMD'              :   'make clean',
+    'adjustSfactor'         :   True,   # adjust scaling factor when pre-equlilbrium is included
 }
 
 centralityParameters = {
@@ -588,6 +590,21 @@ def hydro_with_pre_equilbirium_multipleTaus(aFile):
             file_name = aFile.split('/')[-1]
             move(aFile, path.join(hydroICDirectory, file_name))
 
+        # set hydro scaling factor scaling factor when include free-streaming
+        if(simulationType=="hydro_preEquilibrium" and controlParameterList['adjustSfactor']==True):
+            # construct value list
+            values_list = [taus_now, hydroParameters['vis'], hydroParameters['Edec']]
+            if(superMCParameters['which_mc_model']==5):
+                values_list.append('glb')
+            else:
+                values_list.append('kln')
+            values_list.append('yes')
+
+            sfactor_now = sfactorFinder(db_name, values_list)
+            if sfactor_now==0: 
+                raise ExecutionError("Hydro scaling factor does not exist")
+            hydroParameters['factor'] = sfactor_now
+
         # run hydro: form assignment string
         hydroParameters['T0'] = taus_now
         assignments = formAssignmentStringFromDict(hydroParameters)
@@ -1100,6 +1117,10 @@ def sequentialEventDriverShell():
 
         # get simulation type
         simulationType = controlParameterList['simulation_type']
+
+        # set superMC finalFactor scaling factor when include free-streaming
+        if(simulationType=="hydro_preEquilibrium" and controlParameterList['adjustSfactor']==True):
+            superMCParameters['finalFactor'] = 1.0
 
         # generate initial conditions then loop over initial conditions
         event_id = 0
