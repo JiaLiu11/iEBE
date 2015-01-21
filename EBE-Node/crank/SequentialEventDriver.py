@@ -56,6 +56,7 @@ controlParameterList = {
     'buildCMD'              :   'make build',
     'cleanCMD'              :   'make clean',
     'adjustSfactor'         :   True,   # adjust scaling factor when pre-equlilbrium is included
+    'tablesDir'             :   path.abspath('../tables') # tables for sfactor database etc
 }
 
 centralityParameters = {
@@ -599,7 +600,7 @@ def hydro_with_pre_equilbirium_multipleTaus(aFile):
             else:
                 values_list.append('kln')
             values_list.append('yes')
-
+            db_name = path.join(controlParameterList['tablesDir'], 'sfactorDB.db')
             sfactor_now = sfactorFinder(db_name, values_list)
             if sfactor_now==0: 
                 raise ExecutionError("Hydro scaling factor does not exist")
