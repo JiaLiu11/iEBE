@@ -9,14 +9,14 @@ def sfactorFinder(db_name, values_list):
 	"""
 	This function finds the sfactor correspoinding to specific 
 	switching time tau_s, shear viscosity eta/s (eta_s), and decoupling 
-	temperature t_dec
+	energy density e_dec
 	"""
 	# create connection to database
 	dbCon = sqlite3.connect(db_name)
 	conCursor = dbCon.cursor()
 
 	# refine information
-	names_list = ['tau_s', 'eta_s', 't_dec', 'model', 'has_fs']
+	names_list = ['tau_s', 'eta_s', 'e_dec', 'model', 'has_fs']
 	values_list_str = [str(i) for i in values_list]
 	nameValue_list = zip(names_list[0:3], values_list_str[0:3])
 
