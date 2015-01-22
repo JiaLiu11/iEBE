@@ -466,3 +466,47 @@ def preProcessDecdat2File(source_folder):
     else:
         np.savetxt(decdat2_file, decdat2_output, fmt='%14.6E')
 
+
+def calculateWn(folder, dEdphipOutName = 'dEdydphipThermal.dat',
+    dEdphipHydroName = 'dEdydphipFO.dat', outputFileName = 'wn_vndata.dat'):
+    """
+    This function calculate energy flow anisotropy omega_n (Wn) from the energy azimuthal distribution
+    at the hydro surface and the out surface.
+    It is the python version of part of the matlab script "" which calculates the same quantity.
+    The output Format is has 10 rows and columns for order 1 to order 9
+    """
+    # load phip table
+    phip_th = np.loadtxt(path.join(tables_location, 'phip_gauss_table.dat'))
+    phip_fo = np.loadtxt(path.join(tables_location, 'phi_gauss_table.dat'))
+    # load energy distribution
+    dEdydphip_fo_data = np.loadtxt(path.join(folder, dEdphipHydroName))
+    dEdydphip_th_data = np.loadtxt(path.join(folder, dEdphipOutName))
+
+    # calculate total energy
+    wn_th_denominator = np.sum(dEdydphip_th_data*phip_th[::,1])
+    wn_fo_denominator = np.sum(dEdydphip_fo_data*phip_fo[::,1])
+
+    # pre-allocate space
+    wn_data = np.zeros((10, 9))
+
+    # loop over all orders
+    for iorder in range(0,10):
+        # numerators for energy at out surface
+        wn_th_numerator_real = np.sum(dEdydphip_th_data*np.cos(iorder*phip_th[:,0])*phip_th[:,1])
+        wn_th_numerator_img  = np.sum(dEdydphip_th_data*np.sin(iorder*phip_th[:,0])*phip_th[:,1])
+        # numerators for energy at hydro surface
+        wn_fo_numerator_real = np.sum(dEdydphip_fo_data*np.cos(iorder*phip_fo[:,0])*phip_fo[:,1])
+        wn_fo_numerator_img  = np.sum(dEdydphip_fo_data*np.sin(iorder*phip_fo[:,0])*phip_fo[:,1])
+        # calculate omega n
+        wn_real = (wn_th_numerator_real+wn_fo_numerator_real)/(wn_th_denominator+wn_fo_denominator+1e-18)
+        wn_img  = (wn_th_numerator_img + wn_fo_numerator_img)/(wn_th_denominator+wn_fo_denominator+1e-18)
+        wn_data[iorder, :] = np.array([iorder, wn_th_numerator_real, wn_th_numerator_img,
+                                               wn_fo_numerator_real, wn_fo_numerator_img,
+                                               wn_th_denominator,    wn_fo_denominator,
+                                               wn_real,              wn_img])
+    # save file to folder
+    savefileName = path.join(folder, outputFileName)
+    np.savetxt(savefileName, wn_data,fmt='%19.8e')
+
+
+
