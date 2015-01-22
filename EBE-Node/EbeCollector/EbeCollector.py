@@ -728,7 +728,7 @@ class EbeCollector(object):
         # next create various tables
         db.createTableIfNotExists("inte_vn", (("event_id","integer"), ("tau_s", "real"), ("pid","integer"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
         db.createTableIfNotExists("diff_vn", (("event_id","integer"), ("tau_s", "real"), ("pid","integer"), ("pT","real"), ("n","integer"), ("vn_real","real"), ("vn_imag","real")))
-        db.createTableIfNotExists("multiplicities", (("event_id","integer"), ("tau_s", "real"), ("pid","integer"), ("N","real")))
+        db.createTableIfNotExists("multiplicities", (("event_id","integer"), ("tau_s", "real"), ("pid","integer"), ("N","real"), ("total_pt", "real")))
         db.createTableIfNotExists("spectra", (("event_id","integer"), ("tau_s", "real"), ("pid","integer"), ("pT","real"), ("N","real")))
 
         # the big loop
@@ -767,7 +767,7 @@ class EbeCollector(object):
                         )
                     # write multiplicity table
                     db.insertIntoTable("multiplicities",
-                        (event_id, taus, pid, inte_flow_block[0,1])
+                        (event_id, taus, pid, inte_flow_block[0,1], inte_flow_block[0,2])
                     )
 
         # close connection to commit changes
