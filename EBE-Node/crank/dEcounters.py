@@ -27,7 +27,7 @@ Edec = 0.18  #Unit: GeV/fm^3
 dxdy = 0.01
 # table locations
 rootDir = path.abspath('..')
-tables_location = path.join(rootDir)#, 'tables')
+tables_location = path.join(rootDir, 'tables')
 
 def  dEdydphipSigmaThermal(dEdyd2rdphipFile, edFile, sfactor, \
 		targetFolder, fileName):
@@ -146,6 +146,22 @@ def dEdydphipSigmaFO(iSFolder, iSDataFolder, targetFolder, fileName):
 	# np.savetxt(savefileName, dNdydphipTbl, fmt='%19.10e')
 
 	return dEdy
+
+
+def getTotaldEdy(dEdyd2rdphipFile, edFile, normFactor, iSFolder, iSdataFolder, \
+        dEdphipOutName = 'dEdydphipThermal.dat',dEdphipHydroName = 'dEdydphipFO.dat'):
+    """
+    run two functions from dEcounters to get the total dEdy, also generate 
+    dEdydphip tables for out surface and hydro surface. 
+    """
+    dEdy_therm = dEdydphipSigmaThermal(dEdyd2rdphipFile,edFile,\
+        normFactor, iSdataFolder, dEdphipOutName)
+    dEdy_fo = dEdydphipSigmaFO(iSFolder, iSdataFolder,\
+        iSdataFolder, dEdphipHydroName)
+    # total energy 
+    totaldEdy = dEdy_therm + dEdy_fo
+    return totaldEdy 
+
 
 
 def dEdyTotalDecdat2(resultsFolder, fileName = 'decdat2.dat'):

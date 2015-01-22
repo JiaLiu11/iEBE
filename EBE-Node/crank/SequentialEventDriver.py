@@ -105,14 +105,14 @@ preEquilibriumControl = {
     'resultFiles'                   :   '*', # results files
     'executable'                    :   'lm.e',
     'dataDir'                       :   'data',
-    'saveResultGlobs'               :   ['ed_profile_kln.dat', 'dec*.dat', 'ecc*.dat', 'Epx_initial.dat'], # files match these globs will be saved
+    'saveResultGlobs'               :   ['ed_profile_kln.dat', 'dec*.dat', 'ecc*.dat', 'Epx_initial.dat', 'dEdyd2rdphip_kln.dat'], # files match these globs will be saved
 }
 preEquilibriumParameters = {
     'event_mode'            :    1,  
     'taumin'                :    0.6,
     'taumax'                :    0.8,
     'dtau'                  :    0.2,
-    'dEdyd2rdphip_dist'     :    0, #=1 for calculating energy distribution, only works for KLN
+    'dEdyd2rdphip_dist'     :    1, #=1 for calculating energy distribution, only works for KLN
 }
 
 hydroControl = {
@@ -647,6 +647,7 @@ def hydro_with_pre_equilbirium_multipleTaus(aFile):
         if not path.isdir(aFolder): continue
         yield aFolder
 
+
 def iSSWithHydroResultFiles(fileList):
     """
         Perform iSS calculation using the given list of hydro result files.
@@ -776,6 +777,22 @@ def iSWithResonancesWithHydroResultFolders(folderList):
 
         # execute!
         run("nice -n %d bash ./" % (ProcessNiceness) + iSExecutionEntry, cwd=iSDirectory)
+
+        # calculate energy flow if necessary
+        if(controlParameterList['calculateWn']==True):
+            if(preEquilibriumParameters['dEdyd2rdphip_dist']==0 or superMCParameters['which_mc_model']!=1):
+                print 'No dEdyd2rdphip_dist file to calculate energy flow anisotropy!\n'
+                print 'Output dEdyd2rdphip file: ', preEquilibriumParameters['dEdyd2rdphip_dist']
+                print 'superMC model: ', superMCParameters['which_mc_model']
+                continue
+            else:
+                dEdyd2rdphipFile = path.join(iSOperationDirectory, 'dEdyd2rdphip_kln.dat')
+                edFile = path.join(iSOperationDirectory, 'ed_profile_kln.dat')
+                normFactor = hydroParameters['factor']
+                iSFolder   = iSDirectory
+                iSdataFolder = iSOperationDirectory
+                dEdy = dEcounters.getTotaldEdy(dEdyd2rdphipFile, edFile, normFactor, iSFolder, iSdataFolder)
+                print "total energy: %10.6f"%dEdy
         # construct save file folder
         # get the current source folder name, which is the current taus
         taus_now = aFolder.split('/')[-1]
