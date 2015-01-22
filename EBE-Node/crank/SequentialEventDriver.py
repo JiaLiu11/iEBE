@@ -56,7 +56,8 @@ controlParameterList = {
     'buildCMD'              :   'make build',
     'cleanCMD'              :   'make clean',
     'adjustSfactor'         :   True,   # adjust scaling factor when pre-equlilbrium is included
-    'tablesDir'             :   path.abspath('../tables') # tables for sfactor database etc
+    'tablesDir'             :   path.abspath('../tables'), # tables for sfactor database etc
+    'calculateWn'           :   True,   # calculate energy flow anisotropy 
 }
 
 centralityParameters = {
@@ -105,7 +106,7 @@ preEquilibriumControl = {
     'resultFiles'                   :   '*', # results files
     'executable'                    :   'lm.e',
     'dataDir'                       :   'data',
-    'saveResultGlobs'               :   ['ed_profile_kln.dat', 'dec*.dat', 'ecc*.dat', 'Epx_initial.dat', 'dEdyd2rdphip_kln.dat'], # files match these globs will be saved
+    'saveResultGlobs'               :   ['ed_profile_kln.dat', 'dec*.dat', 'ecc*.dat', 'Epx_initial.dat', 'dEd2rdphip_kln.dat'], # files match these globs will be saved
 }
 preEquilibriumParameters = {
     'event_mode'            :    1,  
@@ -786,7 +787,7 @@ def iSWithResonancesWithHydroResultFolders(folderList):
                 print 'superMC model: ', superMCParameters['which_mc_model']
                 continue
             else:
-                dEdyd2rdphipFile = path.join(iSOperationDirectory, 'dEdyd2rdphip_kln.dat')
+                dEdyd2rdphipFile = path.join(iSOperationDirectory, 'dEd2rdphip_kln.dat')
                 edFile = path.join(iSOperationDirectory, 'ed_profile_kln.dat')
                 normFactor = hydroParameters['factor']
                 iSFolder   = iSDirectory
