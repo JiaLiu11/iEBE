@@ -100,12 +100,13 @@ def checkExecutables():
     ebeNodeFolder = "EBE-Node"
     executables = (
         path.join("superMC", "superMC.e"),
+        path.join("fs", "lm.e"),
         path.join("VISHNew", "VISHNew.e"),
         path.join("iSS", "iSS.e"),
         path.join("iS", "iS.e"),
         path.join("iS", "resonance.e"),
         path.join("iS", "iInteSp.e"),
-        path.join("photonEmission", "hydro_photonEmission.e"),
+        # path.join("photonEmission", "hydro_photonEmission.e"),
         path.join("osc2u", "osc2u.e"),
         path.join("urqmd", "urqmd.e"),
     )
