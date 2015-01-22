@@ -28,20 +28,20 @@ def sfactorFinder(db_name, values_list):
 	sql_query = select_clause + where_clause
 	sfactor = conCursor.execute(sql_query).fetchall()
 
-	# check result
-	if len(sfactor)==0:
-		print "sfactorUtility: No sfactor found, please check the input!\n"
-		print "parameter names: "+names_list
-		print "values:          "+values_list_str
-		sys.exit(-1)		
-	elif len(sfactor)>1: 
-		print "sfactorUtility: More than one sfactor, please check the input!\n"
-		print "parameter names: "+names_list
-		print "values:          "+values_list_str
-		sys.exit(-1)
-
 	# close connection
 	dbCon.close()
+	
+	# check result
+	if len(sfactor)==0:
+		print "sfactorUtility: No sfactor found, please check the input!"
+		print "parameter names: ", names_list
+		print "values:          ", values_list_str, "\n"
+		sys.exit(-1)		
+	elif len(sfactor)>1: 
+		print "sfactorUtility: More than one sfactor, please check the input!"
+		print "parameter names: ", names_list
+		print "values:          ", values_list_str,"\n"
+		sys.exit(-1)
 
 	return sfactor[0][0]
 

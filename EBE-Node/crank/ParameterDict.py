@@ -29,7 +29,7 @@ preEquilibriumParameters = {
 }
 
 hydroParameters = {
-    'vis'       :   0.2,
+    'vis'       :   0.08,
     'T0'        :   0.6, # tau_0
     'Edec'      :   0.18,
     'IhydroJetoutput' :   0,  # switch for output hydro evolution history into hdf5 file

@@ -515,6 +515,7 @@ def hydro_with_pre_equilbirium_multipleTaus(aFile):
         at various switching times. Yield the result folders for various switching
         time for one event.
     """
+    simulationType  = controlParameterList['simulation_type']
     ProcessNiceness = controlParameterList['niceness']
     # set directory strings
     # pre-equilibrium model
