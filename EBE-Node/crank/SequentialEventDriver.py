@@ -787,13 +787,17 @@ def iSWithResonancesWithHydroResultFolders(folderList):
                 print 'superMC model: ', superMCParameters['which_mc_model']
                 continue
             else:
+                # calculate energy azimuthal distribution
                 dEdyd2rdphipFile = path.join(iSOperationDirectory, 'dEd2rdphip_kln.dat')
                 edFile = path.join(iSOperationDirectory, 'ed_profile_kln.dat')
                 normFactor = hydroParameters['factor']
                 iSFolder   = iSDirectory
                 iSdataFolder = iSOperationDirectory
                 dEdy = dEcounters.getTotaldEdy(dEdyd2rdphipFile, edFile, normFactor, iSFolder, iSdataFolder)
-                print "total energy: %10.6f"%dEdy
+                # print "total energy: %10.6f"%dEdy
+                # calculate omega_n
+                calculateWn_code = dEcounters.calculateWn(iSOperationDirectory) # return True for success
+
         # construct save file folder
         # get the current source folder name, which is the current taus
         taus_now = aFolder.split('/')[-1]

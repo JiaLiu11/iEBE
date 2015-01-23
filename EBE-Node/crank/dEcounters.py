@@ -475,16 +475,24 @@ def calculateWn(folder, dEdphipOutName = 'dEdydphipThermal.dat',
     It is the python version of part of the matlab script "" which calculates the same quantity.
     The output Format is has 10 rows and columns for order 1 to order 9
     """
-    # load phip table
-    phip_th = np.loadtxt(path.join(tables_location, 'phip_gauss_table.dat'))
-    phip_fo = np.loadtxt(path.join(tables_location, 'phi_gauss_table.dat'))
-    # load energy distribution
-    dEdydphip_fo_data = np.loadtxt(path.join(folder, dEdphipHydroName))
-    dEdydphip_th_data = np.loadtxt(path.join(folder, dEdphipOutName))
+    try:
+        # load phip table
+        phip_th = np.loadtxt(path.join(tables_location, 'phip_gauss_table.dat'))
+        phip_fo = np.loadtxt(path.join(tables_location, 'phi_gauss_table.dat'))
+        # load energy distribution
+        dEdydphip_fo_data = np.loadtxt(path.join(folder, dEdphipHydroName))
+        dEdydphip_th_data = np.loadtxt(path.join(folder, dEdphipOutName))
+    except:
+        print "calculateWn: no necessary files. Check iS/results Folder!\n"
+        return False
 
-    # calculate total energy
-    wn_th_denominator = np.sum(dEdydphip_th_data*phip_th[::,1])
-    wn_fo_denominator = np.sum(dEdydphip_fo_data*phip_fo[::,1])
+    try:
+        # calculate total energy
+        wn_th_denominator = np.sum(dEdydphip_th_data*phip_th[::,1])
+        wn_fo_denominator = np.sum(dEdydphip_fo_data*phip_fo[::,1])
+    except:
+        print "calculateWn: dimensions do not match. Check phi and phip tables!\n"
+        return False
 
     # pre-allocate space
     wn_data = np.zeros((10, 9))
@@ -507,6 +515,7 @@ def calculateWn(folder, dEdphipOutName = 'dEdydphipThermal.dat',
     # save file to folder
     savefileName = path.join(folder, outputFileName)
     np.savetxt(savefileName, wn_data,fmt='%19.8e')
+    return True
 
 
 
