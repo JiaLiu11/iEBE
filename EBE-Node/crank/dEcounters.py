@@ -468,12 +468,12 @@ def preProcessDecdat2File(source_folder):
 
 
 def calculateWn(folder, dEdphipOutName = 'dEdydphipThermal.dat',
-    dEdphipHydroName = 'dEdydphipFO.dat', outputFileName = 'wn_vndata.dat'):
+    dEdphipHydroName = 'dEdydphipFO.dat', outputFileName = 'wn_integrated_vndata.dat'):
     """
     This function calculate energy flow anisotropy omega_n (Wn) from the energy azimuthal distribution
     at the hydro surface and the out surface.
     It is the python version of part of the matlab script "" which calculates the same quantity.
-    The output Format is has 10 rows and columns for order 1 to order 9
+    The output Format is has 10 rows and 5 columns for order 1 to order 9
     """
     try:
         # load phip table
@@ -495,7 +495,7 @@ def calculateWn(folder, dEdphipOutName = 'dEdydphipThermal.dat',
         return False
 
     # pre-allocate space
-    wn_data = np.zeros((10, 9))
+    wn_data = np.zeros((10, 6))
 
     # loop over all orders
     for iorder in range(0,10):
@@ -508,10 +508,9 @@ def calculateWn(folder, dEdphipOutName = 'dEdydphipThermal.dat',
         # calculate omega n
         wn_real = (wn_th_numerator_real+wn_fo_numerator_real)/(wn_th_denominator+wn_fo_denominator+1e-18)
         wn_img  = (wn_th_numerator_img + wn_fo_numerator_img)/(wn_th_denominator+wn_fo_denominator+1e-18)
-        wn_data[iorder, :] = np.array([iorder, wn_th_numerator_real, wn_th_numerator_img,
-                                               wn_fo_numerator_real, wn_fo_numerator_img,
-                                               wn_th_denominator,    wn_fo_denominator,
-                                               wn_real,              wn_img])
+        wn_data[iorder, :] = np.array([iorder, (wn_th_numerator_real+wn_fo_numerator_real),
+                                               (wn_th_numerator_img +wn_fo_numerator_img),
+                                               wn_real, wn_img, np.sqrt(wn_real**2.0+wn_img**2.0)])
     # save file to folder
     savefileName = path.join(folder, outputFileName)
     np.savetxt(savefileName, wn_data,fmt='%19.8e')

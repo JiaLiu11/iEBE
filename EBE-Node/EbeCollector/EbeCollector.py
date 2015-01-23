@@ -104,6 +104,7 @@ class EbeCollector(object):
             "decay_gamma_phi_hydro" : 9010,
             "decay_gamma_etap_hydro" : 9011,
             "decay_gamma_Sigma0_hydro" : 9012,
+            "wn_hydro"           :  8000,
         })
         
         #UrQMD pid Dictionary, name conversion defined as in binUtility
@@ -717,6 +718,7 @@ class EbeCollector(object):
             "thermal_2212"  :   "proton_thermal",
             "thermal_213"   :   "rho_p_thermal",
             "thermal_333"   :   "phi_thermal",
+            "wn"            :   "wn_hydro", # energy flow anisotropy
         }
         filename_inte = "%s_integrated_vndata.dat" # filename for integrated flow files, %s is the "string in filename" defined in toCollect
         filename_diff = "%s_vndata.dat" # filename for differential flow files
