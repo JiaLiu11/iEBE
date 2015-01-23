@@ -471,12 +471,14 @@ class EbeCollector(object):
                 matchedSubfolders.append((fullPath, taus)) # matched!
 
         # first write the scalar, makes sure there is only one such table
-        db.createTableIfNotExists("scalars", (("event_id","integer"), ("lifetime","real")))
+        db.createTableIfNotExists("scalars", (("event_id","integer"), ("tau_s", "real"), ("lifetime","real")))
         # loop over switching time
         for aSubfolder, taus in matchedSubfolders:
             # for lifetime
+            print path.join(aSubfolder, "surface.dat")
+            print path.exists(path.join(aSubfolder, "surface.dat"))
             maxLifetime = np.max(np.loadtxt(path.join(aSubfolder, "surface.dat"))[:,1])
-            db.insertIntoTable("scalars", (event_id, maxLifetime))
+            db.insertIntoTable("scalars", (event_id, taus, maxLifetime))
             # for others (future)
 
 
