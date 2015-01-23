@@ -747,6 +747,7 @@ def iSWithResonancesWithHydroResultFolders(folderList):
 
     # copy the unaltered particle list file
     copy(path.join(iSDirectory, 'EOS', 'chosen_particles_backup.dat'), path.join(iSDirectory, 'EOS', 'chosen_particles.dat'))
+    copy(path.join(iSDirectory, 'EOS', 'pdg-full.dat'), path.join(iSDirectory, 'EOS', 'pdg.dat'))
     # check executable
     checkExistenceOfExecutables([path.join(iSDirectory, aExe) for aExe in iSExecutables])
 
