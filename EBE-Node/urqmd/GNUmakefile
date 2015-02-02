@@ -15,9 +15,8 @@
 
 # ----------------------------------------- 
 
-FC := gfortran
-FFLAGS = -O3 -cpp
-
+FC := $(shell ../crank/configure_compiler_fortran.sh)
+FFLAGS = $(shell ../crank/configure_compiler_fortran_Flags.sh) -Wl, -z muldefs
 RM		=	rm -f
 O               =       .o
 LDFLAGS         =       $(FFLAGS)
