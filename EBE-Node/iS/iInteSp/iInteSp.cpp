@@ -23,7 +23,7 @@
 #include "arsenal.h"
 
 #define GAUSS_N 30 // used in the integrated vn calculation with pT cut
-#define CALCULATEPT true // if calculate total pt of all charged particles
+
 using namespace std;
 
 
@@ -128,7 +128,6 @@ void calculate_flows(Table& dN_ptdptdphi, ostream& os_diff, ostream& os_inte, do
     //---------------------
     // initialization
     double normalizationi = 0;
-    double pt_normalizationi = 0;
     double vni[number_of_flows][2]; // integrated_flow numerators; 2: 0,1.real,imag
     for (int t=0; t<number_of_flows; t++) {vni[t][0]=0; vni[t][1]=0;}
 
@@ -140,8 +139,7 @@ void calculate_flows(Table& dN_ptdptdphi, ostream& os_diff, ostream& os_inte, do
             double pT = pT_tab.get(1,i+1), pT_weight = pT_tab.get(2,i+1);
 
             normalizationi += normalization[i]*pT*pT_weight;
-            if(CALCULATEPT)
-                pt_normalizationi += normalization[i]*pT*pT*pT_weight; //=pT*dNptdptdy
+
             for (int order=from_order; order<=to_order; order++)
             {
               vni[order-from_order][0] += vn[i][order-from_order][0]*pT*pT_weight;
@@ -186,8 +184,7 @@ void calculate_flows(Table& dN_ptdptdphi, ostream& os_diff, ostream& os_inte, do
 
             double normalization_pT = exp(pT_dN_vn_table.interp(1, 2, pT));
             normalizationi += normalization_pT*pT*pT_weight;
-            if(CALCULATEPT)
-                pt_normalizationi += normalization_pT*pT*pT*pT_weight;
+
             for (int order=from_order; order<=to_order; order++)
             {
                 double vn_pT_real = pT_dN_vn_table.interp(1, 2+(order-from_order)*2+1, pT);
@@ -212,8 +209,7 @@ void calculate_flows(Table& dN_ptdptdphi, ostream& os_diff, ostream& os_inte, do
     vn_inte.set(4, 1, 1);
     vn_inte.set(5, 1, 0);
     vn_inte.set(6, 1, 1);
-    if(CALCULATEPT)
-        vn_inte.set(3,1,pt_normalizationi); //overwrite the dummpy data in first row
+
     for (int t=0; t<number_of_flows; t++)
     {
     vn_inte.set(1, t+2, from_order+t);
@@ -409,7 +405,108 @@ int main()
     perform_eta_integration(&Xi_A_total_N, Xi_A_dN_dy, mass);
     calculate_and_output_spectra_and_vn(Xi_A_dN_dy, Xi_A_total_N, particle_name, mass);
 
+    //for decay photon cocktail
 
+    //for pion 0
+    double pion_zero_mass = 0.13498; mass = pion_zero_mass;
+    particle_name = "pion_0";
+    Table pion_zero_dN_dy("results/spec_111.dat");
+    Table pion_zero_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&pion_zero_total_N, pion_zero_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(pion_zero_dN_dy, pion_zero_total_N, particle_name, mass);
+    //for eta
+    double eta_mass = 0.54775; mass = eta_mass;
+    particle_name = "eta";
+    Table eta_dN_dy("results/spec_221.dat");
+    Table eta_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&eta_total_N, eta_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(eta_dN_dy, eta_total_N, particle_name, mass);
+    //for omega
+    double omega_mass = 0.78259; mass = omega_mass;
+    particle_name = "omega_782";
+    Table omega_dN_dy("results/spec_223.dat");
+    Table omega_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&omega_total_N, omega_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(omega_dN_dy, omega_total_N, particle_name, mass);
+    //for eta prime
+    double etaprime_mass = 0.95778; mass = etaprime_mass;
+    particle_name = "etaprime";
+    Table etaprime_dN_dy("results/spec_331.dat");
+    Table etaprime_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&etaprime_total_N, etaprime_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(etaprime_dN_dy, etaprime_total_N, particle_name, mass);
+    //for phi
+    double phi_mass = 1.01946; mass = phi_mass;
+    particle_name = "phi";
+    Table phi_dN_dy("results/spec_333.dat");
+    Table phi_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&phi_total_N, phi_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(phi_dN_dy, phi_total_N, particle_name, mass);
+    //for Sigma0
+    double Sigma0_mass = 1.19264; mass = Sigma0_mass;
+    particle_name = "Sigma_0";
+    Table Sigma0_dN_dy("results/spec_3212.dat");
+    Table Sigma0_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&Sigma0_total_N, Sigma0_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(Sigma0_dN_dy, Sigma0_total_N, particle_name, mass);
+
+    //direct photons (short lived resonances)
+    double gamma_mass = 0.0; mass = gamma_mass;
+    particle_name = "direct_gamma_shortdecay";
+    Table gamma_direct_dN_dy("results/spec_22.dat");
+    Table gamma_direct_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&gamma_direct_total_N, gamma_direct_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(gamma_direct_dN_dy, gamma_direct_total_N, particle_name, mass);
+    //pi^0 decay photons
+    mass = gamma_mass;
+    particle_name = "decay_gamma_pi0";
+    Table gamma_pi0_dN_dy("results/spec_21.dat");
+    Table gamma_pi0_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&gamma_pi0_total_N, gamma_pi0_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(gamma_pi0_dN_dy, gamma_pi0_total_N, particle_name, mass);
+    //eta decay photons
+    mass = gamma_mass;
+    particle_name = "decay_gamma_eta";
+    Table gamma_eta_dN_dy("results/spec_20.dat");
+    Table gamma_eta_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&gamma_eta_total_N, gamma_eta_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(gamma_eta_dN_dy, gamma_eta_total_N, particle_name, mass);
+    //omega decay photons
+    mass = gamma_mass;
+    particle_name = "decay_gamma_omega";
+    Table gamma_omega_dN_dy("results/spec_19.dat");
+    Table gamma_omega_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&gamma_omega_total_N, gamma_omega_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(gamma_omega_dN_dy, gamma_omega_total_N, particle_name, mass);
+    //eta prime decay photons
+    mass = gamma_mass;
+    particle_name = "decay_gamma_etaprime";
+    Table gamma_etaprime_dN_dy("results/spec_18.dat");
+    Table gamma_etaprime_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&gamma_etaprime_total_N, gamma_etaprime_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(gamma_etaprime_dN_dy, gamma_etaprime_total_N, particle_name, mass);
+    //phi decay photons
+    mass = gamma_mass;
+    particle_name = "decay_gamma_phi";
+    Table gamma_phi_dN_dy("results/spec_17.dat");
+    Table gamma_phi_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&gamma_phi_total_N, gamma_phi_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(gamma_phi_dN_dy, gamma_phi_total_N, particle_name, mass);
+    //Sigma0 decay photons
+    mass = gamma_mass;
+    particle_name = "decay_gamma_Sigma0";
+    Table gamma_Sigma0_dN_dy("results/spec_16.dat");
+    Table gamma_Sigma0_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&gamma_Sigma0_total_N, gamma_Sigma0_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(gamma_Sigma0_dN_dy, gamma_Sigma0_total_N, particle_name, mass);
+    
+    //Sigma0 decay photons
+    mass = gamma_mass;
+    particle_name = "decay_gamma_rho0";
+    Table gamma_rho0_dN_dy("results/spec_15.dat");
+    Table gamma_rho0_total_N(pT_tab_length, phi_tab_length);
+    perform_eta_integration(&gamma_rho0_total_N, gamma_rho0_dN_dy, mass);
+    calculate_and_output_spectra_and_vn(gamma_rho0_dN_dy, gamma_rho0_total_N, particle_name, mass);
 
     //----------------------------------
     // Next, for all charged particles
@@ -447,8 +544,5 @@ int main()
     calculate_and_output_spectra_and_vn(dN_dy, total_N, "Charged_ptcut03", 0, 9, 0.3, 3.6, 6);
     calculate_and_output_spectra_and_vn(dN_dy, total_N, "Charged_ptcut03_3", 0, 9, 0.3, 3.0, 6);
 
-    calculate_and_output_spectra_and_vn(dN_dy, total_N, "Charged_ptcut015_10", 0, 9, 0.15, 10, 6);
-    calculate_and_output_spectra_and_vn(dN_dy, total_N, "Charged_ptcut02_5", 0, 9, 0.2, 5, 6);
-    calculate_and_output_spectra_and_vn(dN_dy, total_N, "Charged_ptcut0510", 0, 9, 0.5, 10, 6);
 }
 

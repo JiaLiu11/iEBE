@@ -10,8 +10,8 @@
 ##			distclean	remove all objectsfiles and binaries
 ##  
 
-CC := $(shell ../crank/configure_compiler_C++.sh)
-CFLAGS= $(shell ../crank/configure_compiler_C++_Flags.sh)
+CC := $(shell ../../crank/configure_compiler_C++.sh)
+CFLAGS= $(shell ../../crank/configure_compiler_C++_Flags.sh)
 
 RM		=	rm -f
 O               =       .o
@@ -25,10 +25,10 @@ MAIN		=	iS.e
 endif
 
 SRC		=	main.cpp arsenal.cpp emissionfunction.cpp \
-			Table.cpp readindata.cpp
+			Table.cpp readindata.cpp ParameterReader.cpp
 
 INC		= 	main.h arsenal.h emissionfunction.h \
-                  Table.h readindata.h Stopwatch.h
+                  Table.h readindata.h Stopwatch.h ParameterReader.h
 
 # -------------------------------------------------
 
@@ -37,7 +37,7 @@ SRCFILES 	= 	$(SRC) $(INC) GNUmakefile
 OBJECTS		=	$(addprefix $(OBJDIR)/, $(addsuffix $O, \
 			$(basename $(SRC))))
 TARGET		=	$(MAIN)
-INSTPATH	=	$(HOME)/local/bin
+INSTPATH	=	../
 
 # --------------- Pattern rules -------------------
 
@@ -74,9 +74,9 @@ install:	$(TARGET)
 		cp $(TARGET) $(INSTPATH)
 
 # --------------- Dependencies -------------------
-./main.cpp: main.h Table.h readindata.h emissionfunction.h arsenal.h
+./main.cpp: main.h Table.h readindata.h emissionfunction.h arsenal.h ParameterReader.h
 ./arsenal.cpp: arsenal.h
 ./emissionfunction.cpp: main.h readindata.h emissionfunction.h Stopwatch.h arsenal.h Table.h
 ./Table.cpp: Table.h arsenal.h
-./readindata.cpp: main.h readindata.h arsenal.h Table.h
-
+./readindata.cpp: main.h readindata.h arsenal.h Table.h ParameterReader.h
+./ParameterReader.cpp: arsenal.h ParameterReader.h
