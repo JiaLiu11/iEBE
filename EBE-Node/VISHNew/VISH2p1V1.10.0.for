@@ -681,7 +681,7 @@ CSHEN===EOS from tables end====================================================
      &                              "!NTD   freeze out skip step in tau"
        Write(111,'(A,T10,A3,F4.1,T30,A)')"R0Bdry", " = ", R0Bdry, 
      &                                                    "!boundary R0"
-       Write(111,'(A,T11,A2,F5.3,T30,A)')"VisBulkNorm", "= " ,
+       Write(111,'(A,T11,A2,E13.7,T30,A)')"VisBulkNorm", "= " ,
      &           VisBulkNorm, "!Bulk viscosity zeta/s norm factor"     
       Close(111)
 
