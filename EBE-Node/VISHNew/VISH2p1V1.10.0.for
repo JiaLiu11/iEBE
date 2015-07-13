@@ -575,9 +575,18 @@ C-------------------------------------------------------------------------------
       Double Precision ss, ddt1, ddt2, ee1, ee2
       External SEOSL7
       Integer iRegulateCounter, iRegulateCounterBulkPi
-
 !   ---Zhi-End---
 
+      Integer InitialURead
+      Common/LDInitial/ InitialURead  ! IintURead =1 read initial velocity profile
+      
+      Integer Initialpitensor
+      Common/Initialpi/ Initialpitensor
+
+      Double precision maxBulkPiRatio
+      Common /maxBulkPiRatio/ maxBulkPiRatio
+      Integer :: bulkPiInitRegSteps=1 ! Number of time steps to impose a stronger bulk pi regulation at the beginning
+      double precision :: largeMaxBulkPiRatio = 2.0
 
 CSHEN======================================================================
 C==========OSCAR2008H related parameters===================================
@@ -1190,7 +1199,13 @@ CSHEN====END====================================================================
          End Do ! pi evolution
         endif
       
-        if(VisBulk > 1D-6) then 
+        if(VisBulk > 1D-6) then
+          if((ITime .le. bulkPiInitRegSteps)
+     &       .and.
+     &       ((InitialURead .eq. 1) .or. Initialpitensor .eq. 1)) then
+            print*, "Use maxBulkPiRatio=",largeMaxBulkPiRatio
+            maxBulkPiRatio = largeMaxBulkPiRatio
+          endif
           if(outputPiviolation) then
             call checkBulkPiandoutputViolation(Time, Dx, Dy, Ed, PL,
      &        NXPhy0, NXPhy, NYPhy0, NYPhy, NX0, NX, NY0, NY, NZ0, NZ,
