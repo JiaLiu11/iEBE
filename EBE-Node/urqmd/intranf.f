@@ -1,4 +1,4 @@
-c $Id: gnuranf.f,v 1.7 1999/11/24 19:47:50 ssoff Exp $
+c $Id: intranf.f,v 1.1 2002/04/24 16:11:27 weber Exp $
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       function ranf(idummy)
 c
@@ -36,11 +36,11 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       implicit none
 
       real*8 dummy, ran2
-      integer iseed, ranseed, oldseed, time, timeseed
+      integer iseed, ranseed, oldseed, dummy1, dummy2, timeseed
       common /seed/iseed,oldseed
 
       if (ranseed.le.0) then
-         timeseed = abs(time())
+         call system_clock(timeseed,dummy1,dummy2)
          if (timeseed.eq.oldseed) return
          ranseed = timeseed
       endif
