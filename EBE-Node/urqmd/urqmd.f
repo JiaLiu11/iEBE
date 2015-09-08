@@ -39,9 +39,6 @@ c
       real*8 Ekinbar, Ekinmes, ESky2, ESky3, EYuk, ECb, EPau
       common /energies/ Ekinbar, Ekinmes, ESky2, ESky3, EYuk, ECb, EPau
       integer cti1sav,cti2sav
-C chp hydro variables
-C       real*8 thydro_start,thydro,nucrad
-C       logical lhydro
   
 c
 c     numerical/technical initialisation
@@ -63,8 +60,6 @@ c
 
 c     time is the system time at the BEGINNING of every timestep
       time = 0.0
-C chp hydro flag, hydro should be called only once
-C       lhydro=.true.
 
 c     initialize random number generator
 c     call auto-seed generator only for first event and if no seed was fixed
@@ -85,22 +80,6 @@ cbb if we are reading old events, check the success of the read-in:
       if (CTOption(40).ne.0.and.(.not.success)) then
         exit
       endif
-
-C chp hydro switch      
-C       if (CToption(45).eq.1)then
-C chp hydro start time (nuclei have passed each other)
-C chp ebeam is only the kinetic energy 
-C chp CTParam(65) is useful for the variation of the start time 
-C chp default value is one
-C        thydro_start=CTParam(65)*2.d0*nucrad(Ap)*sqrt(2.d0*emnuc/ebeam)
-C        write(*,300) 'hydro starts after',thydro_start
-C chp lower limit for hydro start time
-C        if(thydro_start.lt.CTParam(63)) then
-C         thydro_start=CTParam(63)
-C         write(6,300) '... extended to',CTParam(63)
-C        end if
-C       end if
-C  300  format(a18,x,f5.2,' fm/c')
 
 c old time if an old fort.14 is used 
       if(CTOption(40).ne.0)time=acttime
@@ -165,25 +144,7 @@ c     get next collision
             call getnext(k)
 
 c     exit collision loop if no collisions are left
-C             if (k.eq.0) goto 102
-C chp call hydro if start time is reached
-C             if(CTOption(45).eq.1)then
-           
-C              if(cttime(k).gt.thydro_start.and.lhydro)then
-C               st=thydro_start-acttime
-C               call cascstep(acttime,st)
-C chp all particle arrays will be modified by hydro
-C               call hydro(thydro_start,thydro)
-C               acttime=thydro_start
-C               lhydro=.false.
-C               if(thydro.gt.1.d-8.or.CTOption(48).eq.1)then
-C chp full update of collision table
-C               call colload
-                      
-C               go to 101
-C               end if
-C              end if    
-C             end if 
+            if (k.eq.0) goto 102
 
 c  propagate all particles to next collision time
 c  store actual time in acttime, propagation time st=cttime(k)-acttime
@@ -370,6 +331,7 @@ c final output
          end if
          call osc99_event(1)
          call osc99_eoe
+         call nice_event
       
          mp=mp+npart
          if(ctag.eq.0)then
