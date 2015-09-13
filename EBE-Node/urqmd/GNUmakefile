@@ -47,7 +47,7 @@ INSTPATH	=	$(HOME)/local/bin
 
 # --------------- Pattern rules -------------------
 
-$(OBJDIR)/%.o: %.f
+$(OBJDIR)/%.o: %.f*
 	$(FC) $(FFLAGS) -c $< -o $@
 
 %.f:
