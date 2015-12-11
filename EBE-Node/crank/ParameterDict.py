@@ -1,16 +1,32 @@
 controlParameterList = {
-    'simulation_type'       :   'hydroEM_with_decaycocktail', # 'hybrid', 'hydro', 'hydroEM', 'hydroEM_with_decaycocktail', 'hydroEM_preEquilibrium'
+    'simulation_type'       :   'hydro', # 'hybrid', 'hydro', 'hydroEM', 'hydroEM_with_decaycocktail', 'hydroEM_preEquilibrium'
     'niceness'              :   0,       # range from 0 to 19 for process priority, 0 for the highest priority
 }
 
 centralityParameters = {
-    'centrality': '30-40%',  # centrality bin
+    'centrality': '0-10%',  # centrality bin
     'cut_type': 'total_entropy',
     # centrality cut variable: total_entropy or Npart
 }
 
+ipglasmaParameters = {
+    'initialModel'           :   'ipglasma',  # case insensitive, or 'none' to use superMC
+    'dataPath'               :   '/Users/Jia/code/iEBE/ipglasma',  # the absolute path to initial condition path
+    'projectile'             :   'Pb',        # case sensitive, 'Pb' or 'Au'    
+    'target'                 :   'Pb',    
+    'ecm'                    :   2760,        # Unit: AGeV
+    'tau_0'                  :   0.4,         # Unit: fm. Parameters tau_0, dx, dy, xmax, ymax will overwrite the grid settings specified in hydroParameters
+    'dx'                     :   0.17,        
+    'dy'                     :   0.17,
+    'xmax'                   :   17,
+    'ymax'                   :   17,
+    'filePattern'            :   'epsilon-u-Hydro*.dat',
+    'saveICFile'             :   True,
+    'sfactor'                :   20.0,
+}
+
 superMCParameters = {
-    'model_name'                    :   'MCGlb',    # MCGlb or MCKLN
+    'model_name'                    :   'MCGlb',    # MCGlb, MCKLN, or ipglassma
     'Aproj'                         :   208,
     'Atarg'                         :   208,
     'ecm'                           :   2760,

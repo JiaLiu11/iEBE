@@ -39,6 +39,7 @@ allParameterLists = [
     'urqmdParameters',
     'binUtilitiesControl',
     'binUtilitiesParameters',
+    'ipglasmaParameters',
 ]
 
 controlParameterList = {
@@ -96,6 +97,22 @@ superMCParameters = {
     'maxy'                          :   13.0,       # grid size in y (fm)
     'dx'                            :   0.1,        # grid spacing in x (fm)
     'dy'                            :   0.1,        # grid spacing in y (fm)
+}
+
+ipglasmaParameters = {
+    'initialModel'           :   'none',     # case insensitive, or 'none' to use superMC
+    'dataPath'               :   'ipglasma', # the relative path to initial condition path
+    'projectile'             :   'Pb',        # case sensitive, 'Pb' or 'Au'    
+    'target'                 :   'Pb',    
+    'ecm'                    :   2760,        # Unit: AGeV
+    'tau_0'                  :   0.6,         # Unit: fm. Parameters tau_0, dx, dy, xmax, ymax will overwrite the grid settings specified in hydroParameters
+    'dx'                     :   0.17,        
+    'dy'                     :   0.17,
+    'xmax'                   :   17,
+    'ymax'                   :   17,
+    'filePattern'            :   'epsilon-u-Hydro*.dat',
+    'saveICFile'             :   True,
+    'sfactor'                :   20.0
 }
 
 preEquilibriumControl = {
@@ -389,6 +406,85 @@ def generateSuperMCInitialConditions(numberOfEvents):
         yield path.join(superMCDataDirectory, aFile)
 
 
+def selectIPGlasmaInitialConditions(numberOfEvents):
+    """
+        select IP-Glasma initial profile from corresponding folder
+    """
+    ipglasmaDirectory = ipglasmaParameters['dataPath']
+    # get data directory
+    collisionSystem = ipglasmaParameters['projectile']+ipglasmaParameters['target']
+    ecm = ipglasmaParameters['ecm']
+    centrality = centralityParameters['centrality'][:-1]
+    ipglasmaDataDirectory = path.join(ipglasmaDirectory, '%s_%d'%(collisionSystem, ecm),
+        '%s%s'%(collisionSystem, centrality))
+    if not path.exists(ipglasmaDataDirectory):
+        print "No initial files for specified collision system or centrality:"
+        print "%s at %d AGeV for %s"%(collisionSystem, ecm, centrality)
+        exit(1)
+    # get a list of files
+    fileList =  glob(path.join(ipglasmaDataDirectory, ipglasmaParameters['filePattern']))
+    fileList.sort() # sort files by name
+    for aFile in fileList:
+        yield aFile 
+
+def updateHydroParameters():
+    """ 
+        Update hydro parameters according to the IP-Glasma configuration
+    """
+    # check grids
+    if int(ipglasmaParameters['xmax']/ipglasmaParameters['dx']) == int(ipglasmaParameters['ymax']/ipglasmaParameters['dy']):
+        hydroParameters['iLS'] = int(ipglasmaParameters['xmax']/ipglasmaParameters['dx'])
+    else:
+        print "updateHydroParameters: wrong IP-Glasma configuration: number of x grid does not equal to the number of y grid!"
+        print int(ipglasmaParameters['xmax']/ipglasmaParameters['dx']), int(ipglasmaParameters['ymax']/ipglasmaParameters['dy']) 
+        exit(1)
+    hydroParameters['T0'] = ipglasmaParameters['tau_0']
+    hydroParameters['IEin'] = 0    # IP-Glasma dumped energy densities
+    hydroParameters['dx'] = ipglasmaParameters['dx']
+    hydroParameters['dy'] = ipglasmaParameters['dy']
+    hydroParameters['InitialURead'] = 1
+    hydroParameters['factor'] = ipglasmaParameters['sfactor']
+
+
+def transformIPGlasmaInitialProfile(aFile):
+    """
+        Reformat IP-Glasma initial profile to matrix form, make it  
+        compatible with VISHNew input format. Dump zeros as initial pi^mn and bulk Pi
+    """
+    hydroDirectory = path.join(controlParameterList['rootDir'], hydroControl['mainDir'])
+    hydroICDirectory = path.join(hydroDirectory, hydroControl['initialConditionDir'])
+    cleanUpFolder(hydroICDirectory)
+
+    rawData = np.loadtxt(aFile)
+    xgrids = 2*int(round(ipglasmaParameters['xmax']/ipglasmaParameters['dx']))+1
+    ygrids = 2*int(round(ipglasmaParameters['ymax']/ipglasmaParameters['dy']))+1
+
+    # dump pi tensors
+    zero_matrix = np.zeros([xgrids, ygrids])
+    for nu in range(3):
+        for mu in range(nu+1):
+            fileName = 'Pi%d%d_kln.dat'%(mu,nu)
+            np.savetxt(path.join(hydroICDirectory, fileName), zero_matrix, fmt='%.4f',
+                delimiter=' ')
+    np.savetxt(path.join(hydroICDirectory, 'Pi33_kln.dat'), zero_matrix, fmt='%.4f',
+        delimiter=' ') 
+    # dump bulk pi
+    np.savetxt(path.join(hydroICDirectory, 'BulkPi_kln.dat'), zero_matrix, fmt='%.4f',
+                delimiter=' ')
+    # process IP-Glasma profiles
+    positionDict = {
+        '3'         :           'ed',
+        '5'         :           'ux',
+        '6'         :           'uy',
+    }
+    for aNum in positionDict.keys():
+        tempMatrix = np.zeros([xgrids, ygrids])
+        tempMatrix[:-1, :-1] = rawData[:,int(aNum)].reshape((xgrids-1, ygrids-1))
+        np.savetxt(path.join(hydroICDirectory, '%s_profile_kln.dat'%positionDict[aNum]), tempMatrix, 
+            fmt='%18.6e', delimiter='\t') 
+    print "IP-Glasma profile has been transformed!"
+
+
 def hydroWithInitialCondition(aFile):
     """
         Perform a single hydro calculation with the given absolute path to an
@@ -436,6 +532,44 @@ def hydroWithInitialCondition(aFile):
             copy(aFile, controlParameterList['eventResultDir'])
         # yield it
         yield path.join(hydroResultsDirectory, aFile)
+
+
+def hydroWithIPGlasmaInitialCondition():
+    """
+        Perform a single hydro calculation with the given absolute path to an
+        initial condition. Yield the result files.
+    """
+    ProcessNiceness = controlParameterList['niceness']
+    # set directory strings
+    hydroDirectory = path.join(controlParameterList['rootDir'], hydroControl['mainDir'])
+    hydroICDirectory = path.join(hydroDirectory, hydroControl['initialConditionDir'])
+    hydroResultsDirectory = path.join(hydroDirectory, hydroControl['resultDir'])
+    hydroExecutable = hydroControl['executable']
+
+    # check executable
+    checkExistenceOfExecutable(path.join(hydroDirectory, hydroExecutable))
+
+    # clean up initial and results folder
+    cleanUpFolder(hydroResultsDirectory)
+
+    # form assignment string
+    assignments = formAssignmentStringFromDict(hydroParameters)
+    # form executable string
+    executableString = "nice -n %d ./" % (ProcessNiceness) + hydroExecutable + assignments
+    # execute!
+    run(executableString, cwd=hydroDirectory)
+
+    # yield result files
+    worthStoring = []
+    for aGlob in hydroControl['saveResultGlobs']:
+        worthStoring.extend(glob(path.join(hydroResultsDirectory, aGlob)))
+    for aFile in glob(path.join(hydroResultsDirectory, hydroControl['resultFiles'])):
+        # check if this file worth storing, then copy to event result folder
+        if aFile in worthStoring:
+            copy(aFile, controlParameterList['eventResultDir'])
+        # yield it
+        yield path.join(hydroResultsDirectory, aFile)
+
 
 def hydro_with_pre_equilbirium(aFile):
     """
@@ -919,7 +1053,6 @@ def sequentialEventDriverShell():
     try:
         # read parameters
         readInParameters()
-        translate_centrality_cut()
 
         # create result folder
         resultDir = controlParameterList['resultDir']
@@ -935,82 +1068,159 @@ def sequentialEventDriverShell():
         # print current progress to terminal
         stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
         stdout.flush()
-        for aInitialConditionFile in generateSuperMCInitialConditions(controlParameterList['numberOfEvents']):
-            # get the result folder name for storing results, then create it if necessary
-            event_id += 1
-            initial_id = int(aInitialConditionFile.split('/')[-1].split('_')[2])
-            eventResultDir = path.join(resultDir, controlParameterList['eventResultDirPattern'] % event_id)
-            controlParameterList['eventResultDir'] = eventResultDir
-            if path.exists(eventResultDir):
-                rmtree(eventResultDir)
-            makedirs(eventResultDir)
 
-            # print current progress to terminal
-            print("Starting event %d..." % event_id)
-            
-            if superMCControl['saveICFile']:
-                superMCDataDirectory = path.join(controlParameterList['rootDir'], superMCControl['mainDir'], superMCControl['dataDir'])
-                for aFile in glob(path.join(superMCDataDirectory, superMCControl['dataFiles'] % initial_id)):
-                    copy(aFile, controlParameterList['eventResultDir'])
-            
-            if simulationType == 'hydroEM_preEquilibrium':
-                # perform hydro calculations with pre-equilibrium evolution and get a list of all the result filenames
-                hydroResultFiles = [aFile for aFile in 
-                             hydro_with_pre_equilbirium(aInitialConditionFile)]
-            else:
+        # select between initial conditions
+        if ipglasmaParameters['initialModel'].lower() == 'ipglasma':
+            print "iEBE with IP-Glasma initial conditions:"
+            # get the result folder name for storing results, then create it if necessary
+            for aInitialConditionFile in selectIPGlasmaInitialConditions(controlParameterList['numberOfEvents']):
+                event_id += 1
+                eventResultDir = path.join(resultDir, controlParameterList['eventResultDirPattern'] % event_id)
+                controlParameterList['eventResultDir'] = eventResultDir
+                if path.exists(eventResultDir):
+                    rmtree(eventResultDir)
+                makedirs(eventResultDir)
+
+                # print current progress to terminal
+                print("Starting event %d..." % event_id)
+                
+                if ipglasmaParameters['saveICFile']:
+                    copy(aInitialConditionFile, controlParameterList['eventResultDir'])
+
+                transformIPGlasmaInitialProfile(aInitialConditionFile)
+                updateHydroParameters()
+                
                 # perform hydro calculations and get a list of all the result filenames
                 hydroResultFiles = [aFile for aFile in 
-                              hydroWithInitialCondition(aInitialConditionFile)]
-            
-            # fork simulation type here
-            if simulationType == 'hybrid':
-                # perform iSS calculation and return the path to the OSCAR file
-                OSCARFilePath = iSSWithHydroResultFiles(hydroResultFiles)
+                              hydroWithIPGlasmaInitialCondition()]
+                
+                # fork simulation type here
+                if simulationType == 'hybrid':
+                    # perform iSS calculation and return the path to the OSCAR file
+                    OSCARFilePath = iSSWithHydroResultFiles(hydroResultFiles)
 
-                # perform osc2u
-                osc2uOutputFilePath = osc2uFromOSCARFile(OSCARFilePath)
+                    # perform osc2u
+                    osc2uOutputFilePath = osc2uFromOSCARFile(OSCARFilePath)
 
-                # now urqmd
-                urqmdOutputFilePath = urqmdFromOsc2uOutputFile(osc2uOutputFilePath)
+                    # now urqmd
+                    urqmdOutputFilePath = urqmdFromOsc2uOutputFile(osc2uOutputFilePath)
 
-                # copy and concatnate final results from all hydro events into one file
-                combinedUrqmdFile = path.join(controlParameterList['resultDir'], controlParameterList['combinedUrqmdFile'])
-                open(combinedUrqmdFile, 'a').writelines(open(urqmdOutputFilePath).readlines())
+                    # copy and concatnate final results from all hydro events into one file
+                    combinedUrqmdFile = path.join(controlParameterList['resultDir'], controlParameterList['combinedUrqmdFile'])
+                    open(combinedUrqmdFile, 'a').writelines(open(urqmdOutputFilePath).readlines())
 
-                # bin the combined result file to get flows
-                binUrqmdResultFiles(urqmdOutputFilePath)
+                    # bin the combined result file to get flows
+                    binUrqmdResultFiles(urqmdOutputFilePath)
 
-                # delete the huge final UrQMD combined file
-                remove(urqmdOutputFilePath)
+                    # delete the huge final UrQMD combined file
+                    remove(urqmdOutputFilePath)
 
-            elif simulationType == 'hydro':
-                # perform iS calculation and resonance decays
-                iSWithResonancesWithHydroResultFiles(hydroResultFiles)
-            
-            elif simulationType == 'hydroEM':
-                h5file = iSSeventplaneAngleWithHydroResultFiles(hydroResultFiles)
-                # perform EM radiation calculation
-                photonEmissionWithHydroResultFiles(h5file)
-    
-            elif simulationType == 'hydroEM_with_decaycocktail':
-                h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(hydroResultFiles)
-                # perform EM radiation calculation
-                photonEmissionWithHydroResultFiles(h5file)
-            
-            elif simulationType == 'hydroEM_preEquilibrium':
-                # perform iS calculation and resonance decays
-                h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(hydroResultFiles)
-                # perform EM radiation calculation
-                photonEmissionWithHydroResultFiles(h5file)
+                elif simulationType == 'hydro':
+                    # perform iS calculation and resonance decays
+                    iSWithResonancesWithHydroResultFiles(hydroResultFiles)
+                
+                elif simulationType == 'hydroEM':
+                    h5file = iSSeventplaneAngleWithHydroResultFiles(hydroResultFiles)
+                    # perform EM radiation calculation
+                    photonEmissionWithHydroResultFiles(h5file)
+        
+                elif simulationType == 'hydroEM_with_decaycocktail':
+                    h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(hydroResultFiles)
+                    # perform EM radiation calculation
+                    photonEmissionWithHydroResultFiles(h5file)
 
-            tarfile_name = controlParameterList['eventResultDir'].split('/')[-1]
-            call("tar -cf %s.tar %s" % (tarfile_name, tarfile_name), 
-                 shell=True, cwd=resultDir)
-            call("rm -fr %s" % (tarfile_name,), shell=True, cwd=resultDir)
+                tarfile_name = controlParameterList['eventResultDir'].split('/')[-1]
+                call("tar -cf %s.tar %s" % (tarfile_name, tarfile_name), 
+                     shell=True, cwd=resultDir)
+                call("rm -fr %s" % (tarfile_name,), shell=True, cwd=resultDir)
 
-            # print current progress to terminal
-            stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
-            stdout.flush()
+                # print current progress to terminal
+                stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
+                stdout.flush()
+
+        # use superMC
+        elif ipglasmaParameters[initialModel].lower() == 'none':
+            translate_centrality_cut()
+            for aInitialConditionFile in generateSuperMCInitialConditions(controlParameterList['numberOfEvents']):
+                # get the result folder name for storing results, then create it if necessary
+                event_id += 1
+                initial_id = int(aInitialConditionFile.split('/')[-1].split('_')[2])
+                eventResultDir = path.join(resultDir, controlParameterList['eventResultDirPattern'] % event_id)
+                controlParameterList['eventResultDir'] = eventResultDir
+                if path.exists(eventResultDir):
+                    rmtree(eventResultDir)
+                makedirs(eventResultDir)
+
+                # print current progress to terminal
+                print("Starting event %d..." % event_id)
+                
+                if superMCControl['saveICFile']:
+                    superMCDataDirectory = path.join(controlParameterList['rootDir'], superMCControl['mainDir'], superMCControl['dataDir'])
+                    for aFile in glob(path.join(superMCDataDirectory, superMCControl['dataFiles'] % initial_id)):
+                        copy(aFile, controlParameterList['eventResultDir'])
+                
+                if simulationType == 'hydroEM_preEquilibrium':
+                    # perform hydro calculations with pre-equilibrium evolution and get a list of all the result filenames
+                    hydroResultFiles = [aFile for aFile in 
+                                 hydro_with_pre_equilbirium(aInitialConditionFile)]
+                else:
+                    # perform hydro calculations and get a list of all the result filenames
+                    hydroResultFiles = [aFile for aFile in 
+                                  hydroWithInitialCondition(aInitialConditionFile)]
+                
+                # fork simulation type here
+                if simulationType == 'hybrid':
+                    # perform iSS calculation and return the path to the OSCAR file
+                    OSCARFilePath = iSSWithHydroResultFiles(hydroResultFiles)
+
+                    # perform osc2u
+                    osc2uOutputFilePath = osc2uFromOSCARFile(OSCARFilePath)
+
+                    # now urqmd
+                    urqmdOutputFilePath = urqmdFromOsc2uOutputFile(osc2uOutputFilePath)
+
+                    # copy and concatnate final results from all hydro events into one file
+                    combinedUrqmdFile = path.join(controlParameterList['resultDir'], controlParameterList['combinedUrqmdFile'])
+                    open(combinedUrqmdFile, 'a').writelines(open(urqmdOutputFilePath).readlines())
+
+                    # bin the combined result file to get flows
+                    binUrqmdResultFiles(urqmdOutputFilePath)
+
+                    # delete the huge final UrQMD combined file
+                    remove(urqmdOutputFilePath)
+
+                elif simulationType == 'hydro':
+                    # perform iS calculation and resonance decays
+                    iSWithResonancesWithHydroResultFiles(hydroResultFiles)
+                
+                elif simulationType == 'hydroEM':
+                    h5file = iSSeventplaneAngleWithHydroResultFiles(hydroResultFiles)
+                    # perform EM radiation calculation
+                    photonEmissionWithHydroResultFiles(h5file)
+        
+                elif simulationType == 'hydroEM_with_decaycocktail':
+                    h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(hydroResultFiles)
+                    # perform EM radiation calculation
+                    photonEmissionWithHydroResultFiles(h5file)
+                
+                elif simulationType == 'hydroEM_preEquilibrium':
+                    # perform iS calculation and resonance decays
+                    h5file = iSWithResonancesWithdecayPhotonWithHydroResultFiles(hydroResultFiles)
+                    # perform EM radiation calculation
+                    photonEmissionWithHydroResultFiles(h5file)
+
+                tarfile_name = controlParameterList['eventResultDir'].split('/')[-1]
+                call("tar -cf %s.tar %s" % (tarfile_name, tarfile_name), 
+                     shell=True, cwd=resultDir)
+                call("rm -fr %s" % (tarfile_name,), shell=True, cwd=resultDir)
+
+                # print current progress to terminal
+                stdout.write("PROGRESS: %d events out of %d finished.\n" % (event_id, controlParameterList['numberOfEvents']))
+                stdout.flush()
+        else:
+            print("No such option: %s"%ipglasmaParameters['initialModel'])
+            exit(1)
+
 
         # collect mostly used data into a database
         collectEbeResultsToDatabaseFrom(resultDir)
