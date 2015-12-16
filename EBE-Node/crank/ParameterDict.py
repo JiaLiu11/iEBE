@@ -22,7 +22,7 @@ ipglasmaParameters = {
     'ymax'                   :   17,
     'filePattern'            :   'epsilon-u-Hydro*.dat',
     'saveICFile'             :   True,
-    'sfactor'                :   20.0,
+    'sfactor'                :   1.0,
 }
 
 superMCParameters = {

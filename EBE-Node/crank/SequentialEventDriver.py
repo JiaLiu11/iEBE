@@ -424,7 +424,7 @@ def selectIPGlasmaInitialConditions(numberOfEvents):
     # get a list of files
     fileList =  glob(path.join(ipglasmaDataDirectory, ipglasmaParameters['filePattern']))
     fileList.sort() # sort files by name
-    for aFile in fileList:
+    for aFile in fileList[0:numberOfEvents]:
         yield aFile 
 
 def updateHydroParameters():
