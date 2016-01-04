@@ -10,6 +10,8 @@ from os import makedirs, path, unlink
 from shutil import copytree, copy, rmtree
 
 from check_prerequisites import checkEnvironment, checkExecutables, greetings
+from ParameterDict import ipglasmaParameters
+from updateUsedEventsLog import *
 
 # check argv
 try:
@@ -102,6 +104,17 @@ crankFolder = path.join(ebeNodeFolder, crankFolderName)
 
 # copy parameter file into the crank folder
 copy("ParameterDict.py", crankFolder)
+
+# process ip-glasma events
+if ipglasmaParameters['initialModel'] == 'ipglasma':
+    if ipglasmaParameters['skipUsedEvents']:
+        if ipglasmaParameters['cleanUsedEventsLog']:
+            cleanUsedEventsLog()
+        prepareEventsList(numberOfJobs*numberOfEventsPerJob)
+    else:
+        cleanUsedEventsLog()
+        prepareEventsList(numberOfJobs*numberOfEventsPerJob)
+copy("initEventsLog.dat", crankFolder)
 
 # backup parameter files to the result folder
 copy(path.join(crankFolder, "SequentialEventDriver.py"), resultsFolder)

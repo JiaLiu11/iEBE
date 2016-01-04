@@ -112,7 +112,9 @@ ipglasmaParameters = {
     'ymax'                   :   17,
     'filePattern'            :   'epsilon-u-Hydro*.dat',
     'saveICFile'             :   True,
-    'sfactor'                :   20.0
+    'sfactor'                :   20.0,
+    'skipUsedEvents'         :   True,        # whether to skip the events used before according to usedEventsLog.dat
+    'cleanUsedEventsLog'     :   False,       # whether to clean up usedEventsLog.dat 
 }
 
 preEquilibriumControl = {
@@ -408,23 +410,18 @@ def generateSuperMCInitialConditions(numberOfEvents):
 
 def selectIPGlasmaInitialConditions(numberOfEvents):
     """
-        select IP-Glasma initial profile from corresponding folder
+        select IP-Glasma initial profile for one job
     """
-    ipglasmaDirectory = ipglasmaParameters['dataPath']
-    # get data directory
-    collisionSystem = ipglasmaParameters['projectile']+ipglasmaParameters['target']
-    ecm = ipglasmaParameters['ecm']
-    centrality = centralityParameters['centrality'][:-1]
-    ipglasmaDataDirectory = path.join(ipglasmaDirectory, '%s_%d'%(collisionSystem, ecm),
-        '%s%s'%(collisionSystem, centrality))
-    if not path.exists(ipglasmaDataDirectory):
-        print "No initial files for specified collision system or centrality:"
-        print "%s at %d AGeV for %s"%(collisionSystem, ecm, centrality)
-        exit(1)
-    # get a list of files
-    fileList =  glob(path.join(ipglasmaDataDirectory, ipglasmaParameters['filePattern']))
-    fileList.sort() # sort files by name
-    for aFile in fileList[0:numberOfEvents]:
+    # load event list
+    if path.exists('initEventsLog.dat'):
+        with open('initEventsLog.dat', 'r') as f:
+            initFilesList = [line.rstrip('\n') for line in f]
+    # split events
+    pbsFile = glob(path.join(controlParameterList['rootDir'],'job-*.pbs'))[0]
+    jobID = re.findall('\d+' ,pbsFile.split('/')[-1])[0]
+    fileList = initFilesList[(jobID-1)*numberOfEvents:jobID*numberOfEvents]
+    # yield file list
+    for aFile in fileList:
         yield aFile 
 
 def updateHydroParameters():

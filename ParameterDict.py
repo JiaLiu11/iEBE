@@ -23,6 +23,8 @@ ipglasmaParameters = {
     'filePattern'            :   'epsilon-u-Hydro*.dat',
     'saveICFile'             :   True,
     'sfactor'                :   1.0,
+    'skipUsedEvents'         :   True,        # whether to skip the events used before according to usedEventsLog.dat
+    'cleanUsedEventsLog'     :   False,        # whether to clean up usedEventsLog.dat 
 }
 
 superMCParameters = {
