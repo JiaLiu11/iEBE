@@ -24,7 +24,7 @@ ipglasmaParameters = {
     'saveICFile'             :   True,
     'sfactor'                :   1.0,
     'skipUsedEvents'         :   True,        # whether to skip the events used before according to usedEventsLog.dat
-    'cleanUsedEventsLog'     :   True,       # whether to clean up usedEventsLog.dat 
+    'cleanUsedEventsLog'     :   False,        # whether to clean up usedEventsLog.dat 
 }
 
 superMCParameters = {
