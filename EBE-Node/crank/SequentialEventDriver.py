@@ -161,6 +161,7 @@ hydroParameters = {
     'factor'    :   1.0,
     'IhydroJetoutput'   :   1,   # switch for output hydro evolution history into hdf5 file
     'InitialURead'      :   1,   # switch to read in initial flow velocity and shear tensor
+    'factor'            :   1.0,# scaling factor for hydro
 }
 
 iSSControl = {

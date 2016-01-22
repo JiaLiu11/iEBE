@@ -24,7 +24,7 @@ ipglasmaParameters = {
     'saveICFile'             :   True,
     'sfactor'                :   1.0,
     'skipUsedEvents'         :   True,        # whether to skip the events used before according to usedEventsLog.dat
-    'cleanUsedEventsLog'     :   False,        # whether to clean up usedEventsLog.dat 
+    'cleanUsedEventsLog'     :   True,        # whether to clean up usedEventsLog.dat 
 }
 
 superMCParameters = {
@@ -70,6 +70,7 @@ hydroParameters = {
     'IhydroJetoutput' :   1,  # switch for output hydro evolution history into hdf5 file
     'InitialURead'    :   0,  # set it to be 1 when simulation_type == hydroEM_preEquilibrium
     'Initialpitensor' :   0,  # initialization of pi tensor
+    'factor'          :   1.0,# scaling factor for hydro
 }
 
 iSSParameters = {
