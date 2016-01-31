@@ -14,6 +14,7 @@ from shutil import move, copy, rmtree
 from glob import glob
 from subprocess import call
 import numpy as np
+import re
 
 class ExecutionError(Exception): pass # used to signal my own exception
 
