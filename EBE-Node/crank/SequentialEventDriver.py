@@ -421,7 +421,7 @@ def selectIPGlasmaInitialConditions(numberOfEvents):
     # split events
     pbsFile = glob(path.join(controlParameterList['rootDir'],'job-*.pbs'))[0]
     jobID = re.findall('\d+' ,pbsFile.split('/')[-1])[0]
-    fileList = initFilesList[(jobID-1)*numberOfEvents:jobID*numberOfEvents]
+    fileList = initFilesList[(int(jobID)-1)*numberOfEvents:int(jobID)*numberOfEvents]
     # yield file list
     for aFile in fileList:
         yield aFile 
